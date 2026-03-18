@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animaciones en Vue JS Developer</title>
+    <link rel="icon" href="https://desingdata.github.io/desingdata/img/DesingData_favicon-96x96.png" sizes="96x96" type="image/png">
+    <!-- Tailwind CSS para estilos responsivos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- GSAP - Librería externa de animaciones -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- Axios para peticiones HTTP -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        // Configuración de Tailwind para modo oscuro
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#8b5cf6',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('css/styles.css');
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- ============================================
+             NAVBAR RESPONSIVO CON MENÚ HAMBURGUESA
+             ============================================ -->
+        <nav :class="['fixed top-0 w-full z-50 transition-all duration-300', 
+                      isDark ? 'bg-slate-900 border-b border-slate-700' : 'bg-white border-b border-gray-200',
+                      scrolled ? 'shadow-lg' : '']">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <!-- Logo -->
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <i class="ph ph-cube text-2xl text-primary animate-bounce"></i>
+                        <span
+                            class="font-bold text-xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                            VueAnim
+                        </span>
+                    </div>
+
+                    <!-- Menú Desktop -->
+                    <div class="hidden md:flex items-center space-x-4">
+                        <button v-for="section in sections" :key="section.id" @click="currentSection = section.id"
+                            :class="['px-3 py-2 rounded-md text-sm font-medium transition-all duration-200',
+                                        currentSection === section.id 
+                                            ? 'bg-primary text-white' 
+                                            : isDark ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-primary']">
+                            {{ section.name }}
+                        </button>
+
+                        <!-- Botón cambio de tema -->
+                        <button @click="toggleTheme"
+                            class="p-2 rounded-full transition-transform duration-300 hover:rotate-12"
+                            :class="isDark ? 'bg-slate-800 text-yellow-400' : 'bg-gray-100 text-gray-600'">
+                            <i :class="isDark ? 'ph ph-sun text-xl' : 'ph ph-moon text-xl'"></i>
+                        </button>
+                    </div>
+
+                    <!-- Botón Hamburguesa Mobile -->
+                    <div class="md:hidden flex items-center gap-2">
+                        <button @click="toggleTheme" class="p-2 rounded-full"
+                            :class="isDark ? 'bg-slate-800 text-yellow-400' : 'bg-gray-100 text-gray-600'">
+                            <i :class="isDark ? 'ph ph-sun text-xl' : 'ph ph-moon text-xl'"></i>
+                        </button>
+
+                        <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 rounded-md focus:outline-none"
+                            :class="isDark ? 'text-white' : 'text-gray-700'">
+                            <div class="w-6 h-6 flex flex-col justify-center items-center gap-1.5"
+                                :class="{ 'menu-open': mobileMenuOpen }">
+                                <span class="hamburger-line w-6 h-0.5 bg-current block"></span>
+                                <span class="hamburger-line w-6 h-0.5 bg-current block"></span>
+                                <span class="hamburger-line w-6 h-0.5 bg-current block"></span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Menú Mobile Desplegable con Transición -->
+            <Transition name="slide">
+                <div v-show="mobileMenuOpen" class="md:hidden">
+                    <div :class="['px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t',
+                                isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200']">
+                        <button v-for="section in sections" :key="section.id"
+                            @click="currentSection = section.id; mobileMenuOpen = false"
+                            :class="['block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-all duration-200',
+                                        currentSection === section.id 
+                                            ? 'bg-primary text-white' 
+                                            : isDark ? 'text-gray-300 hover:text-white hover:bg-slate-800' : 'text-gray-700 hover:text-primary hover:bg-gray-50']">
+                            {{ section.name }}
+                        </button>
+                    </div>
+                </div>
+            </Transition>
+        </nav>
+
+        <!-- ============================================
+             CONTENIDO PRINCIPAL
+             ============================================ -->
+        <main class="pt-20 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+
+            <!-- Sección: Estilos y Atributos Dinámicos -->
+            <section v-show="currentSection === 'estilos'" class="space-y-8">
+                <h2 :class="['text-3xl font-bold mb-6', isDark ? 'text-white' : 'text-gray-900']">
+                    1. Manejo de Estilos & Atributos Dinámicos
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Estilos como Atributos (v-bind:style) -->
+                    <div :class="['p-6 rounded-xl border-2 transition-all duration-500', 
+                                isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <i class="ph ph-paint-brush text-primary"></i>
+                            Estilos como Atributos (v-bind:style)
+                        </h3>
+
+                        <!-- Binding de estilos dinámicos -->
+                        <div class="dynamic-box w-full h-32 rounded-lg flex items-center justify-center text-white font-bold mb-4 cursor-pointer"
+                            :style="dynamicStyles" @click="cycleColor">
+                            Click para cambiar color
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm">Opacidad: {{ styles.opacity }}</label>
+                            <input type="range" v-model.number="styles.opacity" min="0.1" max="1" step="0.1"
+                                class="w-full accent-primary">
+
+                            <label class="block text-sm mt-2">Radio de borde: {{ styles.borderRadius }}px</label>
+                            <input type="range" v-model.number="styles.borderRadius" min="0" max="50"
+                                class="w-full accent-primary">
+                        </div>
+                    </div>
+
+                    <!-- Clases CSS Dinámicas (v-bind:class) -->
+                    <div :class="['p-6 rounded-xl border-2 transition-all duration-500',
+                                isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <i class="ph ph-toggle-left text-secondary"></i>
+                            Clases CSS Dinámicas (v-bind:class)
+                        </h3>
+
+                        <div :class="['p-8 rounded-lg text-center transition-all duration-300 cursor-pointer mb-4',
+                                    isDark ? 'bg-slate-700' : 'bg-gray-100',
+                                    elementoActivo ? 'estado-activo bg-primary text-white' : 'estado-inactivo']"
+                            @click="elementoActivo = !elementoActivo">
+                            <p class="font-medium">
+                                Estado: {{ elementoActivo ? 'ACTIVO' : 'INACTIVO' }}
+                            </p>
+                            <p class="text-sm mt-2 opacity-75">Click para alternar</p>
+                        </div>
+
+                        <div class="flex gap-2 flex-wrap">
+                            <span v-for="(clase, index) in clasesDinamicas" :key="index" :class="['px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 cursor-pointer',
+                                          clase.activa ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700']"
+                                @click="clase.activa = !clase.activa">
+                                {{ clase.nombre }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección: Transiciones y Renderizado Condicional -->
+            <section v-show="currentSection === 'transiciones'" class="space-y-8">
+                <h2 :class="['text-3xl font-bold mb-6', isDark ? 'text-white' : 'text-gray-900']">
+                    2. Transiciones & Renderizado Condicional
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Transición Fade -->
+                    <div
+                        :class="['p-6 rounded-xl border-2', isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                        <h3 class="text-lg font-semibold mb-4">Fade Transition</h3>
+                        <button @click="showFade = !showFade"
+                            class="mb-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
+                            Toggle Fade
+                        </button>
+                        <Transition name="fade">
+                            <div v-if="showFade"
+                                class="p-4 bg-gradient-to-r from-primary to-secondary text-white rounded-lg">
+                                Contenido con transición fade
+                            </div>
+                        </Transition>
+                    </div>
+
+                    <!-- Transición Slide -->
+                    <div
+                        :class="['p-6 rounded-xl border-2', isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                        <h3 class="text-lg font-semibold mb-4">Slide Transition</h3>
+                        <button @click="showSlide = !showSlide"
+                            class="mb-4 px-4 py-2 bg-secondary text-white rounded-lg hover:bg-purple-600 transition-colors">
+                            Toggle Slide
+                        </button>
+                        <Transition name="slide">
+                            <div v-if="showSlide"
+                                class="p-4 bg-gradient-to-r from-secondary to-pink-500 text-white rounded-lg">
+                                Contenido con transición slide
+                            </div>
+                        </Transition>
+                    </div>
+
+                    <!-- Transición Bounce -->
+                    <div
+                        :class="['p-6 rounded-xl border-2', isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                        <h3 class="text-lg font-semibold mb-4">Bounce Animation</h3>
+                        <button @click="showBounce = !showBounce"
+                            class="mb-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                            Toggle Bounce
+                        </button>
+                        <Transition name="bounce">
+                            <div v-if="showBounce"
+                                class="p-4 bg-gradient-to-r from-green-400 to-teal-500 text-white rounded-lg text-center">
+                                🎉 Bounce!
+                            </div>
+                        </Transition>
+                    </div>
+                </div>
+
+                <!-- TransitionGroup para listas -->
+                <div
+                    :class="['p-6 rounded-xl border-2 mt-6', isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                    <h3 class="text-lg font-semibold mb-4">TransitionGroup - Lista Animada</h3>
+                    <div class="flex gap-2 mb-4 flex-wrap">
+                        <button @click="addItem"
+                            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
+                            <i class="ph ph-plus"></i> Agregar
+                        </button>
+                        <button @click="removeItem"
+                            class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                            <i class="ph ph-minus"></i> Eliminar
+                        </button>
+                        <button @click="shuffleItems"
+                            class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-purple-600 transition-colors">
+                            <i class="ph ph-shuffle"></i> Mezclar
+                        </button>
+                    </div>
+
+                    <TransitionGroup name="list" tag="div" class="flex flex-wrap gap-3">
+                        <div v-for="item in items" :key="item.id"
+                            class="px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-full cursor-pointer hover:scale-110 transition-transform"
+                            @click="removeSpecificItem(item.id)">
+                            {{ item.text }}
+                        </div>
+                    </TransitionGroup>
+                </div>
+
+                <!-- Modal con Renderizado Condicional -->
+                <div class="mt-6">
+                    <button @click="showModal = true"
+                        class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg hover:shadow-lg transition-all">
+                        Abrir Modal Animado
+                    </button>
+
+                    <!-- Teleport para el modal -->
+                    <Teleport to="body">
+                        <Transition name="fade">
+                            <div v-if="showModal"
+                                class="fixed inset-0 z-50 flex items-center justify-center modal-overlay"
+                                @click="showModal = false">
+                                <Transition name="bounce">
+                                    <div v-if="showModal"
+                                        :class="['p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 transform',
+                                                                    isDark ? 'bg-slate-800 text-white' : 'bg-white text-gray-900']"
+                                        @click.stop>
+                                        <h3 class="text-2xl font-bold mb-4">Modal Animado</h3>
+                                        <p class="mb-6">Ejemplo de renderizado condicional con Vue Transitions y
+                                            Teleport.</p>
+                                        <button @click="showModal = false"
+                                            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                </Transition>
+                            </div>
+                        </Transition>
+                    </Teleport>
+                </div>
+            </section>
+
+            <!-- Sección: GSAP (Librería Externa) -->
+            <section v-show="currentSection === 'gsap'" class="space-y-8">
+                <h2 :class="['text-3xl font-bold mb-6', isDark ? 'text-white' : 'text-gray-900']">
+                    3. GSAP - Librería Externa de Animaciones
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- GSAP Básico -->
+                    <div
+                        :class="['p-6 rounded-xl border-2', isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                        <h3 class="text-lg font-semibold mb-4">GSAP Básico</h3>
+                        <div ref="gsapBox"
+                            class="w-24 h-24 bg-gradient-to-br from-primary to-secondary rounded-lg shadow-lg cursor-pointer hover:shadow-xl"
+                            @click="animateGSAP">
+                        </div>
+                        <p class="mt-4 text-sm opacity-75">Click en el cuadrado para animar con GSAP</p>
+                    </div>
+
+                    <!-- GSAP Timeline -->
+                    <div
+                        :class="['p-6 rounded-xl border-2', isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                        <h3 class="text-lg font-semibold mb-4">GSAP Timeline</h3>
+                        <div class="space-y-2">
+                            <div ref="timeline1" class="w-full h-8 bg-primary rounded"></div>
+                            <div ref="timeline2" class="w-full h-8 bg-secondary rounded"></div>
+                            <div ref="timeline3" class="w-full h-8 bg-pink-500 rounded"></div>
+                        </div>
+                        <button @click="playTimeline"
+                            class="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
+                            Reproducir Secuencia
+                        </button>
+                    </div>
+
+                    <!-- GSAP Stagger -->
+                    <div
+                        :class="['p-6 rounded-xl border-2 md:col-span-2', isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                        <h3 class="text-lg font-semibold mb-4">GSAP Stagger Effect</h3>
+                        <div class="flex gap-2 flex-wrap justify-center">
+                            <div v-for="n in 8" :key="n" :ref="el => setStaggerRef(el, n)"
+                                class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary shadow-lg">
+                            </div>
+                        </div>
+                        <div class="flex gap-2 justify-center mt-4">
+                            <button @click="staggerAnimation"
+                                class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                Stagger In
+                            </button>
+                            <button @click="staggerOut"
+                                class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-purple-600 transition-colors">
+                                Stagger Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sección: Axios y Datos -->
+            <section v-show="currentSection === 'axios'" class="space-y-8">
+                <h2 :class="['text-3xl font-bold mb-6', isDark ? 'text-white' : 'text-gray-900']">
+                    4. Axios - Envío y Recepción de Datos
+                </h2>
+
+                <div
+                    :class="['p-6 rounded-xl border-2', isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                    <div class="flex justify-between items-center mb-6 flex-wrap gap-2">
+                        <h3 class="text-lg font-semibold">Usuarios de JSONPlaceholder</h3>
+                        <button @click="fetchUsers" :disabled="loading"
+                            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center gap-2">
+                            <i v-if="loading" class="ph ph-spinner animate-spin"></i>
+                            {{ loading ? 'Cargando...' : 'Recargar Datos' }}
+                        </button>
+                    </div>
+
+                    <!-- Estados de carga y error -->
+                    <div v-if="loading" class="flex justify-center py-12">
+                        <div class="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin">
+                        </div>
+                    </div>
+
+                    <div v-else-if="error" class="p-4 bg-red-100 text-red-700 rounded-lg mb-4">
+                        Error: {{ error }}
+                    </div>
+
+                    <!-- Lista con animación -->
+                    <TransitionGroup v-else name="list" tag="div"
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div v-for="user in users" :key="user.id"
+                            class="p-4 rounded-lg border hover-lift cursor-pointer"
+                            :class="isDark ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div
+                                    class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
+                                    {{ user.name.charAt(0) }}
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-sm">{{ user.name }}</h4>
+                                    <p class="text-xs opacity-75">@{{ user.username }}</p>
+                                </div>
+                            </div>
+                            <p class="text-sm opacity-75 truncate">{{ user.email }}</p>
+                        </div>
+                    </TransitionGroup>
+                </div>
+
+                <!-- Formulario POST simulado -->
+                <div
+                    :class="['p-6 rounded-xl border-2', isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                    <h3 class="text-lg font-semibold mb-4">Simular Envío POST</h3>
+                    <form @submit.prevent="submitForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Título</label>
+                            <input v-model="form.title" type="text" required
+                                :class="['w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all',
+                                           isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300']">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Contenido</label>
+                            <textarea v-model="form.body" rows="3" required
+                                :class="['w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all',
+                                              isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300']"></textarea>
+                        </div>
+                        <button type="submit" :disabled="submitting"
+                            class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-purple-600 transition-all disabled:opacity-50 flex items-center gap-2">
+                            <i v-if="submitting" class="ph ph-spinner animate-spin"></i>
+                            {{ submitting ? 'Enviando...' : 'Enviar Datos' }}
+                        </button>
+                    </form>
+
+                    <!-- Respuesta del servidor -->
+                    <Transition name="slide">
+                        <div v-if="responseData" class="mt-4 p-4 bg-green-100 text-green-800 rounded-lg">
+                            <h4 class="font-semibold mb-2">Respuesta del servidor:</h4>
+                            <pre class="text-xs overflow-x-auto">{{ JSON.stringify(responseData, null, 2) }}</pre>
+                        </div>
+                    </Transition>
+                </div>
+            </section>
+
+            <!-- Sección: Utilidades y Herramientas -->
+            <section v-show="currentSection === 'utilidades'" class="space-y-8">
+                <h2 :class="['text-3xl font-bold mb-6', isDark ? 'text-white' : 'text-gray-900']">
+                    5. Utilidades, Herramientas y Debug
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Utilidades de Animación -->
+                    <div
+                        :class="['p-6 rounded-xl border-2', isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <i class="ph ph-toolbox text-primary"></i>
+                            Utilidades de Animación
+                        </h3>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm w-24">Velocidad:</span>
+                                <input type="range" v-model.number="animationSpeed" min="0.1" max="2" step="0.1"
+                                    class="flex-1 accent-primary">
+                                <span class="text-sm w-12">{{ animationSpeed }}x</span>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <button @click="pauseAllAnimations"
+                                    class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors text-sm">
+                                    Pausar Todo
+                                </button>
+                                <button @click="resumeAllAnimations"
+                                    class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm">
+                                    Reanudar
+                                </button>
+                                <button @click="reverseAllAnimations"
+                                    class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-sm">
+                                    Reversa
+                                </button>
+                            </div>
+
+                            <div class="p-3 rounded-lg bg-opacity-10 bg-primary">
+                                <p class="text-sm">
+                                    <i class="ph ph-info mr-1"></i>
+                                    Tiempo transcurrido: {{ elapsedTime }}s
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configuraciones Debug -->
+                    <div
+                        :class="['p-6 rounded-xl border-2', isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <i class="ph ph-bug text-red-500"></i>
+                            Configuraciones Debug
+                        </h3>
+
+                        <div class="space-y-3">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" v-model="debugMode" class="accent-primary">
+                                <span class="text-sm">Modo Debug (console logs)</span>
+                            </label>
+
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" v-model="showGrid" class="accent-primary">
+                                <span class="text-sm">Mostrar Grid de referencia</span>
+                            </label>
+
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" v-model="reducedMotion" class="accent-primary">
+                                <span class="text-sm">Reducir movimiento (accesibilidad)</span>
+                            </label>
+
+                            <div class="mt-4 p-3 rounded bg-slate-900 text-green-400 font-mono text-xs">
+                                <p>// Vue DevTools Info:</p>
+                                <p>Vue.version: {{ vueVersion }}</p>
+                                <p>Componentes: {{ componentCount }}</p>
+                                <p>Estado actual: {{ currentSection }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de Extensiones -->
+                    <div
+                        :class="['p-6 rounded-xl border-2 md:col-span-2', isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200']">
+                        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <i class="ph ph-puzzle-piece text-secondary"></i>
+                            Extensiones Recomendadas
+                        </h3>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <a href="https://chrome.google.com/webstore/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd"
+                                target="_blank"
+                                class="flex items-center gap-3 p-3 rounded-lg hover:bg-opacity-10 hover:bg-primary transition-all group">
+                                <div
+                                    class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white">
+                                    <i class="ph ph-vue-logo text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold group-hover:text-primary transition-colors">Vue DevTools
+                                    </h4>
+                                    <p class="text-xs opacity-75">Extensión oficial para Chrome/Firefox</p>
+                                </div>
+                            </a>
+
+                            <div class="flex items-center gap-3 p-3 rounded-lg">
+                                <div
+                                    class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white">
+                                    <i class="ph ph-activity text-xl"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Performance Monitor</h4>
+                                    <p class="text-xs opacity-75">FPS: {{ fps }} | Memoria: {{ memoryUsage }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Grid de debug (condicional) -->
+        <div v-if="showGrid" class="fixed inset-0 pointer-events-none z-40 opacity-10">
+            <div class="h-full w-full"
+                style="background-image: linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px); background-size: 20px 20px;">
+            </div>
+        </div>
+    </div>
+    <footer>
+        <div class="container">
+            <span class="footer-tag">
+                <a style="text-decoration: none;" href="https://desingdata.github.io/desingdata/" target="_blank">Desing
+                    Data</a> 2026
+            </span>
+            <span class="footer-tag">
+                ·By <a style="text-decoration: none;" href="https://miguelmauricioriveralopez18686.github.io/mrlPortafolio/"
+                    target="_blank">
+                    Miguel Mauricio Rivera López</a>.
+            </span>
+        </div>
+    </footer>
+    <script src="js/script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,207 @@
+/* ============================================
+           1. MANEJO DE ESTILOS
+           Definición de estilos base y transiciones CSS
+           ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ============================================
+           2. ESTILOS COMO ATRIBUTOS (v-bind:style)
+           Las animaciones dinámicas usan estilos inline
+           ============================================ */
+
+.dynamic-box {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+           3. CLASES CSS DINÁMICAS (v-bind:class)
+           Clases condicionales para estados animados
+           ============================================ */
+
+.estado-activo {
+    transform: scale(1.05);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.estado-inactivo {
+    opacity: 0.6;
+    transform: scale(0.95);
+}
+
+/* ============================================
+           4. TRANSICIONES DE VUE
+           Clases específicas para <Transition> y <TransitionGroup>
+           ============================================ */
+
+/* Fade transition */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+/* Slide transition */
+.slide-enter-active,
+.slide-leave-active {
+    transition: all 0.5s ease;
+}
+
+.slide-enter-from {
+    opacity: 0;
+    transform: translateX(-30px);
+}
+
+.slide-leave-to {
+    opacity: 0;
+    transform: translateX(30px);
+}
+
+/* Bounce transition */
+.bounce-enter-active {
+    animation: bounce-in 0.5s;
+}
+
+.bounce-leave-active {
+    animation: bounce-in 0.5s reverse;
+}
+
+@keyframes bounce-in {
+    0% {
+        transform: scale(0);
+    }
+
+    50% {
+        transform: scale(1.25);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* List transitions */
+.list-enter-active,
+.list-leave-active {
+    transition: all 0.4s ease;
+}
+
+.list-enter-from,
+.list-leave-to {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.list-move {
+    transition: transform 0.4s ease;
+}
+
+/* ============================================
+           5. RENDERIZADO CONDICIONAL (v-if, v-show)
+           Transiciones suaves al mostrar/ocultar elementos
+           ============================================ */
+
+.modal-overlay {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+/* ============================================
+           6. UTILIDADES
+           Clases helper para animaciones rápidas
+           ============================================ */
+
+.hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.pulse-animation {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ============================================
+           7. EXTENSIÓN - Animaciones personalizadas
+           ============================================ */
+
+.rotate-continuous {
+    animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ============================================
+           NAVBAR HAMBURGUESA RESPONSIVO
+           ============================================ */
+
+.hamburger-line {
+    transition: all 0.3s ease;
+}
+
+.menu-open .hamburger-line:first-child {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.menu-open .hamburger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.menu-open .hamburger-line:last-child {
+    transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* Dark mode específico */
+.dark body {
+    background-color: #0f172a;
+    color: #e2e8f0;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+    .mobile-hidden {
+        display: none;
+    }
+}
+footer {
+      padding-block: 2rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--clr-muted);
+    }
