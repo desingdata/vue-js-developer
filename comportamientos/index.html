@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vue · Comportamientos</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.3.4/vue.global.prod.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    /* ─── CSS Variables · Temas Claro / Oscuro ─────────────────────────── */
+    :root {
+      --bg:        #f0ece4;
+      --surface:   #fff8f0;
+      --border:    #d4c9b8;
+      --accent:    #c94a1a;
+      --accent2:   #1a6ec9;
+      --text:      #1a1410;
+      --text-soft: #6b5e52;
+      --success:   #1a7a3a;
+      --error:     #c9201a;
+      --tag-bg:    #1a1410;
+      --tag-text:  #f0ece4;
+      --shadow:    0 4px 24px rgba(26,20,16,.12);
+      --radius:    6px;
+      --nav-h:     60px;
+      --transition: .25s ease;
+    }
+    [data-theme="dark"] {
+      --bg:        #111010;
+      --surface:   #1c1b1a;
+      --border:    #333230;
+      --accent:    #e8612b;
+      --accent2:   #4d9fe8;
+      --text:      #ede8e2;
+      --text-soft: #8a827a;
+      --success:   #3db860;
+      --error:     #e84040;
+      --tag-bg:    #ede8e2;
+      --tag-text:  #111010;
+      --shadow:    0 4px 24px rgba(0,0,0,.45);
+    }
+
+    /* ─── Reset & Base ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background var(--transition), color var(--transition);
+    }
+    code, .mono { font-family: 'Space Mono', monospace; }
+
+    /* ─── Navbar · Hamburguesa ──────────────────────────────────────────── */
+    /*
+      NAVBAR HAMBURGUESA:
+      Menú de navegación responsivo que se colapsa en un ícono de tres líneas
+      en pantallas pequeñas. Al hacer clic, despliega el menú verticalmente.
+    */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      height: var(--nav-h);
+      background: var(--surface);
+      border-bottom: 2px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex; align-items: center;
+      padding: 0 1.5rem;
+      gap: 1rem;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .nav-logo {
+      font-size: 1.15rem; font-weight: 800; letter-spacing: -.5px;
+      color: var(--accent);
+      flex: 1;
+    }
+    .nav-logo span { color: var(--text); }
+    .nav-links {
+      display: flex; gap: .25rem; list-style: none;
+    }
+    .nav-links a {
+      display: block; padding: .4rem .75rem; border-radius: var(--radius);
+      font-size: .82rem; font-weight: 600; letter-spacing: .3px;
+      color: var(--text-soft); text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+    }
+    .nav-links a:hover { background: var(--border); color: var(--text); }
+    .nav-links a.active { background: var(--accent); color: #fff; }
+
+    /* Botón tema */
+    .btn-theme {
+      background: none; border: 2px solid var(--border); border-radius: var(--radius);
+      padding: .35rem .6rem; cursor: pointer; font-size: 1rem;
+      color: var(--text); transition: border-color var(--transition), background var(--transition);
+    }
+    .btn-theme:hover { border-color: var(--accent); background: var(--border); }
+
+    /* Hamburguesa */
+    .hamburger {
+      display: none; flex-direction: column; gap: 5px;
+      background: none; border: none; cursor: pointer; padding: .4rem;
+    }
+    .hamburger span {
+      display: block; width: 24px; height: 2px;
+      background: var(--text);
+      transition: transform .3s ease, opacity .3s ease;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ─── Responsividad del menú ────────────────────────────────────────── */
+    @media (max-width: 700px) {
+      .hamburger { display: flex; }
+      .nav-links {
+        display: none; flex-direction: column; gap: 0;
+        position: absolute; top: var(--nav-h); left: 0; right: 0;
+        background: var(--surface);
+        border-bottom: 2px solid var(--border);
+        padding: .5rem 1.5rem 1rem;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links a { padding: .6rem .75rem; font-size: .92rem; }
+    }
+
+    /* ─── Layout principal ──────────────────────────────────────────────── */
+    main {
+      max-width: 900px; margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+      display: flex; flex-direction: column; gap: 2.5rem;
+    }
+    h1 {
+      font-size: clamp(1.6rem, 5vw, 2.6rem); font-weight: 800;
+      line-height: 1.15;
+    }
+    h1 em { color: var(--accent); font-style: normal; }
+    .subtitle { color: var(--text-soft); font-size: .95rem; margin-top: .4rem; }
+
+    /* ─── Card ──────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: calc(var(--radius)*2);
+      padding: 1.75rem;
+      box-shadow: var(--shadow);
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .card-title {
+      font-size: 1.05rem; font-weight: 700;
+      margin-bottom: .3rem; color: var(--accent);
+    }
+    .card-desc {
+      font-size: .8rem; color: var(--text-soft);
+      margin-bottom: 1.2rem; font-family: 'Space Mono', monospace;
+      line-height: 1.6;
+    }
+    .tag {
+      display: inline-block;
+      background: var(--tag-bg); color: var(--tag-text);
+      font-size: .7rem; font-family: 'Space Mono', monospace;
+      padding: .15rem .55rem; border-radius: 99px; margin-right: .3rem; margin-bottom: .4rem;
+    }
+
+    /* ─── Sección 1: Métodos & Eventos de Teclado/Mouse ────────────────── */
+    /*
+      MÉTODOS: Funciones definidas dentro de `methods` en Vue que encapsulan
+      lógica reutilizable y pueden ser llamadas desde la plantilla.
+      DETECCIÓN DE EVENTOS: Vue usa la directiva v-on (o @) para escuchar
+      eventos del DOM como click, keydown, mousemove, etc.
+    */
+    .event-box {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    @media (max-width: 540px) { .event-box { grid-template-columns: 1fr; } }
+    .tracker {
+      border: 2px solid var(--border); border-radius: var(--radius);
+      padding: 1rem; font-size: .82rem; line-height: 1.8;
+      min-height: 80px;
+    }
+    .tracker strong { color: var(--accent); }
+    .mouse-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      height: 90px; display: flex; align-items: center; justify-content: center;
+      font-size: .78rem; color: var(--text-soft); cursor: crosshair;
+      transition: border-color .2s, background .2s;
+      user-select: none;
+    }
+    .mouse-zone:hover { border-color: var(--accent); background: rgba(201,74,26,.06); }
+    .key-input {
+      width: 100%; padding: .6rem .85rem;
+      background: var(--bg); border: 2px solid var(--border);
+      border-radius: var(--radius); color: var(--text);
+      font-family: 'Space Mono', monospace; font-size: .85rem;
+      outline: none; transition: border-color .2s;
+      margin-top: .5rem;
+    }
+    .key-input:focus { border-color: var(--accent2); }
+
+    /* ─── Sección 2: Emisión de eventos (EventBus) ─────────────────────── */
+    /*
+      EMISIÓN Y ESCUCHA DE EVENTOS: Los componentes hijo emiten eventos con
+      $emit(nombre, dato); el padre los escucha con v-on:nombre="handler".
+      Aquí lo simulamos con un bus de eventos reactivo.
+    */
+    .bus-grid {
+      display: flex; gap: .75rem; flex-wrap: wrap;
+    }
+    .bus-btn {
+      padding: .5rem 1rem; border-radius: var(--radius);
+      border: 2px solid currentColor; background: none;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: .82rem;
+      cursor: pointer; transition: background .2s, color .2s;
+    }
+    .bus-btn.info    { color: var(--accent2); }
+    .bus-btn.success { color: var(--success); }
+    .bus-btn.warn    { color: var(--accent); }
+    .bus-btn:hover   { background: currentColor; color: var(--surface); }
+    .event-log {
+      margin-top: .85rem;
+      border: 2px solid var(--border); border-radius: var(--radius);
+      padding: .75rem 1rem; min-height: 60px;
+      font-family: 'Space Mono', monospace; font-size: .78rem;
+      line-height: 1.9; max-height: 130px; overflow-y: auto;
+    }
+    .log-entry { display: flex; gap: .5rem; align-items: baseline; }
+    .log-time  { color: var(--text-soft); font-size: .7rem; }
+    .log-info    { color: var(--accent2); }
+    .log-success { color: var(--success); }
+    .log-warn    { color: var(--accent); }
+
+    /* ─── Sección 3: Formulario con validación ─────────────────────────── */
+    /*
+      FORMULARIOS Y DIRECTIVAS:
+      v-model vincula bidireccionalemente un campo de formulario a una propiedad.
+      VALIDACIÓN EN TIEMPO REAL: Se usa `watch` o propiedades computadas para
+      verificar los valores mientras el usuario escribe.
+      PERSISTENCIA: Se guarda el estado en localStorage al enviar.
+      RECONSTRUCCIÓN: Al cargar, se recupera el estado guardado.
+    */
+    .form-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    @media (max-width: 540px) { .form-grid { grid-template-columns: 1fr; } }
+    .form-group { display: flex; flex-direction: column; gap: .35rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: .78rem; font-weight: 700; color: var(--text-soft); letter-spacing: .4px; text-transform: uppercase; }
+    input, select, textarea {
+      padding: .6rem .85rem;
+      background: var(--bg); border: 2px solid var(--border);
+      border-radius: var(--radius); color: var(--text);
+      font-family: 'Syne', sans-serif; font-size: .9rem;
+      outline: none; transition: border-color .2s;
+      -webkit-appearance: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent2); }
+    input.valid   { border-color: var(--success); }
+    input.invalid { border-color: var(--error); }
+    .hint {
+      font-size: .73rem; font-family: 'Space Mono', monospace;
+      margin-top: .1rem; min-height: 1rem;
+    }
+    .hint.ok  { color: var(--success); }
+    .hint.err { color: var(--error); }
+    .hint.soft{ color: var(--text-soft); }
+    textarea { resize: vertical; min-height: 80px; }
+    select option { background: var(--surface); color: var(--text); }
+
+    /* Campos dependientes */
+    .dep-anim {
+      animation: slideDown .25s ease;
+    }
+    @keyframes slideDown {
+      from { opacity:0; transform: translateY(-8px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    /* Submit */
+    .btn-submit {
+      margin-top: .5rem; padding: .7rem 1.75rem;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius);
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: .95rem;
+      cursor: pointer; transition: opacity .2s, transform .1s;
+      align-self: flex-start;
+    }
+    .btn-submit:hover:not(:disabled) { opacity: .88; transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-reset {
+      margin-top: .5rem; padding: .7rem 1.25rem;
+      background: none; color: var(--text-soft);
+      border: 2px solid var(--border); border-radius: var(--radius);
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: .9rem;
+      cursor: pointer; transition: border-color .2s, color .2s;
+    }
+    .btn-reset:hover { border-color: var(--text); color: var(--text); }
+    .form-actions { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; grid-column: 1 / -1; }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999;
+      padding: .85rem 1.4rem; border-radius: var(--radius);
+      background: var(--success); color: #fff;
+      font-weight: 700; font-size: .88rem;
+      box-shadow: var(--shadow);
+      animation: toastIn .3s ease;
+      transition: opacity .3s;
+    }
+    .toast.out { opacity: 0; }
+    @keyframes toastIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ─── Mixin demo ────────────────────────────────────────────────────── */
+    /*
+      MIXIN: Objeto reutilizable que contiene data, métodos, hooks, etc.
+      Se combina con un componente mediante la opción `mixins: [miMixin]`.
+      En Vue 3 Composition API se reemplaza por composables.
+    */
+    .mixin-demo {
+      display: flex; gap: .75rem; align-items: center; flex-wrap: wrap;
+    }
+    .counter-display {
+      font-family: 'Space Mono', monospace;
+      font-size: 2.4rem; font-weight: 700;
+      color: var(--accent); min-width: 3ch; text-align: center;
+    }
+    .btn-counter {
+      width: 40px; height: 40px; border-radius: var(--radius);
+      border: 2px solid var(--border); background: none;
+      font-size: 1.3rem; cursor: pointer; color: var(--text);
+      transition: background .15s, border-color .15s;
+    }
+    .btn-counter:hover { border-color: var(--accent); background: var(--border); }
+    .counter-log { font-size: .78rem; color: var(--text-soft); font-family: 'Space Mono', monospace; }
+
+    /* ─── Divider ───────────────────────────────────────────────────────── */
+    hr { border: none; border-top: 2px solid var(--border); }
+
+    /* ─── Stored data panel ─────────────────────────────────────────────── */
+    .stored-panel {
+      background: var(--bg); border: 2px solid var(--border);
+      border-radius: var(--radius); padding: 1rem;
+      font-family: 'Space Mono', monospace; font-size: .76rem;
+      line-height: 1.8; white-space: pre-wrap; max-height: 160px; overflow-y: auto;
+    }
+    .stored-key { color: var(--accent2); }
+    .stored-val { color: var(--text); }
+
+    /* ─── Section heading ───────────────────────────────────────────────── */
+    .section-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      font-size: .75rem; font-weight: 800; margin-right: .6rem;
+      flex-shrink: 0;
+    }
+    .section-head {
+      display: flex; align-items: center; margin-bottom: 1rem;
+    }
+    .section-head-text h2 { font-size: 1rem; font-weight: 800; }
+    .section-head-text p  { font-size: .75rem; color: var(--text-soft); font-family: 'Space Mono', monospace; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       NAVBAR HAMBURGUESA
+       Comportamiento: click en hamburger → toggle menúAbierto (v-on:click)
+  ══════════════════════════════════════════════════════════════════ -->
+  <nav>
+    <div class="nav-logo">Vue<span>·Comp</span></div>
+    <ul class="nav-links" :class="{ open: menuAbierto }">
+      <li><a href="#metodos"    class="active" @click="menuAbierto=false">Métodos</a></li>
+      <li><a href="#eventos"    @click="menuAbierto=false">Eventos</a></li>
+      <li><a href="#mixin"      @click="menuAbierto=false">Mixin</a></li>
+      <li><a href="#formulario" @click="menuAbierto=false">Formulario</a></li>
+    </ul>
+    <!-- CAMBIO DE TEMA: Alterna entre dark/light usando un método -->
+    <button class="btn-theme" @click="toggleTema" :title="'Tema: ' + tema">
+      {{ tema === 'dark' ? '☀️' : '🌙' }}
+    </button>
+    <!-- Hamburger: v-on:click invoca toggleMenu (método) -->
+    <button class="hamburger" :class="{ open: menuAbierto }" @click="toggleMenu" aria-label="Menú">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <main>
+
+    <!-- ── HEADER ──────────────────────────────────────────────────────── -->
+    <div>
+      <h1>Comportamientos<br><em>en Vue 3</em></h1>
+      <p class="subtitle mono">Proyecto práctico · métodos, eventos, mixins, formularios, persistencia</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECCIÓN 1 · MÉTODOS y DETECCIÓN DE EVENTOS DE TECLADO/MOUSE
+         id="metodos"
+    ══════════════════════════════════════════════════════════════════ -->
+    <section id="metodos">
+      <div class="card">
+        <div class="section-head">
+          <span class="section-num">1</span>
+          <div class="section-head-text">
+            <h2>Métodos & Detección de Eventos</h2>
+            <p>methods · @keydown · @mousemove · @click</p>
+          </div>
+        </div>
+
+        <!-- Etiquetas de conceptos -->
+        <span class="tag">v-on</span>
+        <span class="tag">@keydown</span>
+        <span class="tag">@mousemove</span>
+        <span class="tag">methods</span>
+
+        <p class="card-desc">
+          <!-- MÉTODOS: Funciones en el objeto methods que encapsulan
+               comportamiento y pueden ser llamadas desde la plantilla
+               o desde otros métodos. -->
+          Los <strong>métodos</strong> son funciones declaradas en <code>methods</code> que
+          Vue enlaza automáticamente al contexto del componente.<br>
+          <code>@keydown</code> y <code>@mousemove</code> son <strong>directivas de eventos</strong>
+          que ejecutan un método cuando el DOM dispara el evento correspondiente.
+        </p>
+
+        <div class="event-box">
+          <!-- Rastreador de teclado
+               EVENTO TECLADO: @keydown captura cada pulsación de tecla
+               y ejecuta el método registrarTecla(event) -->
+          <div>
+            <label style="font-size:.75rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.4px">
+              ⌨️ Escucha de teclado
+            </label>
+            <input
+              class="key-input"
+              placeholder="Escribe aquí..."
+              @keydown="registrarTecla"
+              @focus="keyFocus=true"
+              @blur="keyFocus=false"
+            />
+            <div class="tracker" style="margin-top:.6rem">
+              <strong>Última tecla:</strong> {{ ultimaTecla || '—' }}<br>
+              <strong>Código:</strong>       {{ ultimoCodigo || '—' }}<br>
+              <strong>Total pulsadas:</strong> {{ totalTeclas }}
+            </div>
+          </div>
+
+          <!-- Rastreador de mouse
+               EVENTO MOUSE: @mousemove ejecuta registrarMouse(event)
+               que actualiza las coordenadas reactivamente -->
+          <div>
+            <label style="font-size:.75rem;font-weight:700;color:var(--text-soft);text-transform:uppercase;letter-spacing:.4px">
+              🖱️ Escucha de mouse
+            </label>
+            <div
+              class="mouse-zone"
+              @mousemove="registrarMouse"
+              @mouseleave="mouseEnZona=false"
+              @mouseenter="mouseEnZona=true"
+            >
+              {{ mouseEnZona ? `X:${mouseX} · Y:${mouseY}` : 'Mueve el mouse aquí' }}
+            </div>
+            <div class="tracker" style="margin-top:.6rem">
+              <strong>Mouse X:</strong> {{ mouseX }}<br>
+              <strong>Mouse Y:</strong> {{ mouseY }}<br>
+              <strong>En zona:</strong>  {{ mouseEnZona ? 'Sí ✓' : 'No' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECCIÓN 2 · EMISIÓN Y ESCUCHA DE EVENTOS
+         id="eventos"
+    ══════════════════════════════════════════════════════════════════ -->
+    <section id="eventos">
+      <div class="card">
+        <div class="section-head">
+          <span class="section-num">2</span>
+          <div class="section-head-text">
+            <h2>Emisión y Escucha de Eventos</h2>
+            <p>$emit · event bus · log de eventos</p>
+          </div>
+        </div>
+
+        <span class="tag">$emit</span>
+        <span class="tag">event-bus</span>
+        <span class="tag">v-on</span>
+
+        <p class="card-desc">
+          <!-- EMISIÓN DE EVENTOS: En Vue los componentes hijo emiten
+               eventos con $emit('nombre', payload); el padre los escucha
+               con @nombre="handler". Aquí lo simulamos con un bus reactivo. -->
+          Simula la comunicación entre componentes: cada botón
+          <strong>emite</strong> un evento con tipo y mensaje; el log
+          lo <strong>escucha</strong> y registra con marca de tiempo.
+        </p>
+
+        <div class="bus-grid">
+          <!-- Ejecución de métodos en un evento:
+               @click="emitirEvento('info', ...)" combina
+               escucha de evento DOM + llamada a método + emisión de evento Vue -->
+          <button class="bus-btn info"    @click="emitirEvento('info',    'Componente hijo inicializado')">Emitir INFO</button>
+          <button class="bus-btn success" @click="emitirEvento('success', 'Datos guardados correctamente')">Emitir SUCCESS</button>
+          <button class="bus-btn warn"    @click="emitirEvento('warn',    'Atención: campo vacío detectado')">Emitir WARN</button>
+          <button class="bus-btn" style="color:var(--text-soft)" @click="limpiarLog">Limpiar log</button>
+        </div>
+
+        <div class="event-log">
+          <div v-if="logEventos.length === 0" style="color:var(--text-soft)">
+            Sin eventos aún. Pulsa un botón para emitir.
+          </div>
+          <!-- v-for renderiza cada entrada del log de eventos -->
+          <div v-for="(ev, i) in logEventos" :key="i" class="log-entry">
+            <span class="log-time">{{ ev.hora }}</span>
+            <span :class="'log-' + ev.tipo">▸ [{{ ev.tipo.toUpperCase() }}]</span>
+            <span>{{ ev.msg }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECCIÓN 3 · MIXIN — importación de comportamientos
+         id="mixin"
+    ══════════════════════════════════════════════════════════════════ -->
+    <section id="mixin">
+      <div class="card">
+        <div class="section-head">
+          <span class="section-num">3</span>
+          <div class="section-head-text">
+            <h2>Mixin — Comportamiento Reutilizable</h2>
+            <p>mixins · composable · lógica compartida</p>
+          </div>
+        </div>
+
+        <span class="tag">mixins</span>
+        <span class="tag">reusable logic</span>
+
+        <p class="card-desc">
+          <!-- MIXIN: Fragmento de lógica Vue (data, methods, hooks)
+               que se mezcla en un componente con mixins:[miMixin].
+               En Vue 3 Composition API se reemplaza con composables (useX). -->
+          El <strong>mixin counterMixin</strong> aporta: datos (<code>contador</code>,
+          <code>historial</code>), métodos (<code>incrementar</code>,
+          <code>decrementar</code>, <code>resetear</code>) y el hook
+          <code>created</code>. El componente lo importa sin redefinir nada.
+        </p>
+
+        <div class="mixin-demo">
+          <button class="btn-counter" @click="decrementar">−</button>
+          <div class="counter-display">{{ contador }}</div>
+          <button class="btn-counter" @click="incrementar">+</button>
+          <button class="btn-counter" style="font-size:.9rem;width:auto;padding:0 .8rem" @click="resetear">Reset</button>
+        </div>
+
+        <p class="counter-log" style="margin-top:.85rem">
+          Historial (últimas 6 acciones):
+          <!-- v-for sobre el historial que proviene del mixin -->
+          <span v-for="(h,i) in historial.slice(-6)" :key="i">
+            <span :style="{color: h > 0 ? 'var(--success)' : h < 0 ? 'var(--error)' : 'var(--text-soft)'}">
+              {{ h > 0 ? '+' + h : h }}
+            </span>{{ i < Math.min(historial.length,6)-1 ? ' → ' : '' }}
+          </span>
+          <span v-if="historial.length === 0" style="color:var(--text-soft)">—</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         SECCIÓN 4 · FORMULARIO COMPLETO
+         Directivas, v-model, campos dependientes, validación, persistencia
+         id="formulario"
+    ══════════════════════════════════════════════════════════════════ -->
+    <section id="formulario">
+      <div class="card">
+        <div class="section-head">
+          <span class="section-num">4</span>
+          <div class="section-head-text">
+            <h2>Formulario Completo</h2>
+            <p>v-model · validación · campos dependientes · localStorage</p>
+          </div>
+        </div>
+
+        <span class="tag">v-model</span>
+        <span class="tag">watch</span>
+        <span class="tag">computed</span>
+        <span class="tag">v-if</span>
+        <span class="tag">localStorage</span>
+
+        <p class="card-desc">
+          <!-- FORMULARIOS Y DIRECTIVAS:
+               v-model crea un enlace bidireccional entre el campo HTML
+               y la propiedad de data.
+               RENDERIZACIÓN DE CAMPOS DEPENDIENTES: v-if/v-show renderiza
+               o elimina un campo según el valor de otro campo.
+               VALIDACIÓN EN TIEMPO REAL: watch vigila cada propiedad y
+               actualiza los errores mientras el usuario escribe.
+               PERSISTENCIA / RECONSTRUCCIÓN: JSON.stringify guarda en
+               localStorage; al montar (created) se recupera con JSON.parse. -->
+          Formulario de registro con validación en tiempo real, campos
+          dependientes (profesión → especialidad), persistencia en
+          <code>localStorage</code> y reconstrucción de estado al recargar.
+        </p>
+
+        <div class="form-grid">
+
+          <!-- VINCULACIÓN CON v-model: cada input/select/textarea está
+               enlazado bidireccionalmente a una propiedad del objeto form -->
+          <div class="form-group">
+            <label>Nombre *</label>
+            <input
+              v-model="form.nombre"
+              placeholder="Tu nombre"
+              :class="{ valid: val.nombre===true, invalid: val.nombre===false }"
+            />
+            <!-- VALIDACIÓN EN TIEMPO REAL: el hint se actualiza
+                 reactivamente según la propiedad computada val.nombre -->
+            <span class="hint" :class="{ ok: val.nombre===true, err: val.nombre===false, soft: val.nombre===null }">
+              {{ mensajes.nombre }}
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label>Email *</label>
+            <input
+              v-model="form.email"
+              type="email"
+              placeholder="correo@ejemplo.com"
+              :class="{ valid: val.email===true, invalid: val.email===false }"
+            />
+            <span class="hint" :class="{ ok: val.email===true, err: val.email===false, soft: val.email===null }">
+              {{ mensajes.email }}
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label>Edad *</label>
+            <input
+              v-model.number="form.edad"
+              type="number" min="1" max="120"
+              placeholder="25"
+              :class="{ valid: val.edad===true, invalid: val.edad===false }"
+            />
+            <span class="hint" :class="{ ok: val.edad===true, err: val.edad===false, soft: val.edad===null }">
+              {{ mensajes.edad }}
+            </span>
+          </div>
+
+          <!-- CAMPO DEPENDIENTE (nivel 1): profesión seleccionada -->
+          <div class="form-group">
+            <label>Profesión *</label>
+            <select v-model="form.profesion">
+              <option value="">— Selecciona —</option>
+              <option value="dev">Desarrollador/a</option>
+              <option value="dis">Diseñador/a</option>
+              <option value="pm">Product Manager</option>
+              <option value="otro">Otro</option>
+            </select>
+            <span class="hint soft">{{ form.profesion ? '✓ Selección registrada' : 'Elige tu área' }}</span>
+          </div>
+
+          <!-- RENDERIZACIÓN DE CAMPOS DEPENDIENTES:
+               v-if muestra este bloque SOLO si profesion === 'dev'.
+               La clase dep-anim añade animación de entrada. -->
+          <div class="form-group dep-anim" v-if="form.profesion === 'dev'">
+            <label>Especialidad (Dev)</label>
+            <select v-model="form.especialidad">
+              <option value="">— Elige stack —</option>
+              <option value="frontend">Frontend</option>
+              <option value="backend">Backend</option>
+              <option value="fullstack">Fullstack</option>
+              <option value="mobile">Mobile</option>
+            </select>
+            <span class="hint soft">Campo dependiente de «Desarrollador/a»</span>
+          </div>
+
+          <div class="form-group dep-anim" v-if="form.profesion === 'dis'">
+            <label>Especialidad (Diseño)</label>
+            <select v-model="form.especialidad">
+              <option value="">— Elige rama —</option>
+              <option value="ux">UX Research</option>
+              <option value="ui">UI Design</option>
+              <option value="brand">Branding</option>
+            </select>
+            <span class="hint soft">Campo dependiente de «Diseñador/a»</span>
+          </div>
+
+          <div class="form-group full">
+            <label>Mensaje</label>
+            <textarea v-model="form.mensaje" placeholder="Cuéntanos algo sobre ti…"></textarea>
+          </div>
+
+          <!-- ACCIONES -->
+          <div class="form-actions">
+            <!-- EJECUCIÓN DE MÉTODO EN UN EVENTO:
+                 @click="enviarFormulario" ejecuta el método cuando el usuario pulsa -->
+            <button class="btn-submit" @click="enviarFormulario" :disabled="!formularioValido">
+              Guardar & Persistir
+            </button>
+            <button class="btn-reset" @click="resetearFormulario">Limpiar</button>
+            <span class="mono" style="font-size:.75rem;color:var(--text-soft)">
+              {{ formularioValido ? '✓ Listo para enviar' : 'Completa los campos requeridos' }}
+            </span>
+          </div>
+
+        </div>
+
+        <!-- PERSISTENCIA / RECONSTRUCCIÓN DE ESTADO:
+             Muestra lo que está guardado en localStorage -->
+        <hr style="margin: 1.5rem 0" />
+        <p class="card-desc" style="margin-bottom:.6rem">
+          💾 <strong>Estado persistido</strong> en <code>localStorage</code>
+          — se reconstruye al recargar la página:
+        </p>
+        <div class="stored-panel">
+          <span v-if="!datosGuardados" style="color:var(--text-soft)">Sin datos guardados aún.</span>
+          <template v-else>
+            <span v-for="(val, key) in datosGuardados" :key="key">
+              <span class="stored-key">{{ key }}</span>: <span class="stored-val">{{ val || '""' }}</span>{{ '\n' }}
+            </span>
+          </template>
+        </div>
+      </div>
+    </section>
+
+  </main><!-- /main -->
+
+  <!-- TOAST de confirmación (aparece al guardar) -->
+  <div v-if="toastVisible" class="toast" :class="{ out: toastSaliendo }">
+    ✓ Datos guardados en localStorage
+  </div>
+
+</div><!-- /#app -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   MIXIN: counterMixin
+   Objeto reutilizable que se mezcla en la instancia Vue.
+   Aporta: data (contador, historial), methods (incrementar, decrementar,
+   resetear) y el hook created. Equivalente a un composable en Vue 3 Options.
+═══════════════════════════════════════════════════════════════════════ */
+const counterMixin = {
+  data() {
+    return {
+      contador: 0,     // Estado compartido por el mixin
+      historial: []    // Registro de cambios
+    };
+  },
+  methods: {
+    /* MÉTODO del mixin: incrementar
+       Aumenta el contador y registra el delta en el historial. */
+    incrementar() {
+      this.contador++;
+      this.historial.push(1);
+      this.emitirEvento('info', `Contador incrementado → ${this.contador}`);
+    },
+    /* MÉTODO del mixin: decrementar */
+    decrementar() {
+      this.contador--;
+      this.historial.push(-1);
+      this.emitirEvento('warn', `Contador decrementado → ${this.contador}`);
+    },
+    /* MÉTODO del mixin: resetear */
+    resetear() {
+      this.historial.push(-this.contador);
+      this.contador = 0;
+      this.emitirEvento('success', 'Contador reseteado a 0');
+    }
+  },
+  /* HOOK DEL MIXIN: se ejecuta cuando el componente se crea */
+  created() {
+    console.log('[counterMixin] Mixin mezclado con el componente principal.');
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CREACIÓN DEL COMPORTAMIENTO principal con Vue.createApp
+   El objeto options combina: data, mixins, computed, watch, methods, created
+═══════════════════════════════════════════════════════════════════════ */
+const { createApp } = Vue;
+
+createApp({
+  /* MIXINS: Lista de objetos a mezclar con esta instancia.
+     counterMixin inyecta contador, historial e incrementar/decrementar/resetear. */
+  mixins: [counterMixin],
+
+  /* ── DATA: Estado reactivo del componente ───────────────────────── */
+  data() {
+    return {
+      /* Navegación */
+      menuAbierto: false,
+
+      /* Tema · CAMBIO DE TEMA: 'light' | 'dark' */
+      tema: localStorage.getItem('vue_tema') || 'light',
+
+      /* Eventos de teclado */
+      ultimaTecla:  '',
+      ultimoCodigo: '',
+      totalTeclas:  0,
+      keyFocus:     false,
+
+      /* Eventos de mouse */
+      mouseX:    0,
+      mouseY:    0,
+      mouseEnZona: false,
+
+      /* BUS DE EVENTOS — log */
+      logEventos: [],
+
+      /* Formulario (v-model vincula cada campo) */
+      form: {
+        nombre:       '',
+        email:        '',
+        edad:         '',
+        profesion:    '',
+        especialidad: '',
+        mensaje:      ''
+      },
+
+      /* Toast */
+      toastVisible:  false,
+      toastSaliendo: false,
+
+      /* Datos persistidos (para mostrar en pantalla) */
+      datosGuardados: null
+    };
+  },
+
+  /* ── COMPUTED: Propiedades derivadas del estado (validación en tiempo real) ─ */
+  computed: {
+    /*
+      VALIDACIÓN EN TIEMPO REAL: Cada propiedad computed evalúa
+      su campo y devuelve true (válido), false (inválido) o null (sin tocar).
+    */
+    val() {
+      const { nombre, email, edad } = this.form;
+      return {
+        nombre: nombre.length === 0 ? null : nombre.trim().length >= 2,
+        email:  email.length  === 0 ? null : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),
+        edad:   edad === '' ? null : (edad >= 1 && edad <= 120)
+      };
+    },
+    /* Mensajes de validación en tiempo real */
+    mensajes() {
+      const v = this.val;
+      return {
+        nombre: v.nombre === null ? 'Mín. 2 caracteres'    : v.nombre ? '✓ Nombre válido'    : '✗ Nombre demasiado corto',
+        email:  v.email  === null ? 'ejemplo@correo.com'   : v.email  ? '✓ Email válido'     : '✗ Formato inválido',
+        edad:   v.edad   === null ? 'Entre 1 y 120 años'   : v.edad   ? '✓ Edad válida'      : '✗ Fuera de rango'
+      };
+    },
+    /* El formulario es válido si nombre, email y edad son válidos */
+    formularioValido() {
+      return this.val.nombre === true && this.val.email === true && this.val.edad === true;
+    }
+  },
+
+  /* ── WATCH: Observadores que reaccionan a cambios de estado ──────── */
+  watch: {
+    /*
+      WATCH sobre form.profesion: Cuando el usuario cambia de profesión,
+      se limpia el campo dependiente especialidad para evitar valores incoherentes.
+    */
+    'form.profesion'(nueva) {
+      this.form.especialidad = '';
+      if (nueva) this.emitirEvento('info', `Profesión cambiada a: ${nueva}`);
+    },
+    /*
+      WATCH sobre el tema: Persiste la preferencia de tema en localStorage
+      cada vez que cambia.
+    */
+    tema(nuevo) {
+      localStorage.setItem('vue_tema', nuevo);
+      /* Aplica data-theme en <html> para que las CSS vars afecten todo el documento */
+      document.documentElement.setAttribute('data-theme', nuevo);
+    }
+  },
+
+  /* ── METHODS: Comportamientos / funciones del componente ─────────── */
+  methods: {
+
+    /* MÉTODO: toggleMenu
+       CREACIÓN DE COMPORTAMIENTO hamburguesa — alterna el estado menuAbierto */
+    toggleMenu() {
+      this.menuAbierto = !this.menuAbierto;
+    },
+
+    /* MÉTODO: toggleTema
+       CAMBIO DE TEMA — alterna entre 'light' y 'dark' */
+    toggleTema() {
+      this.tema = this.tema === 'light' ? 'dark' : 'light';
+    },
+
+    /* MÉTODO: registrarTecla
+       DETECCIÓN DE EVENTO DE TECLADO
+       Recibe el evento KeyboardEvent y actualiza el estado reactivo. */
+    registrarTecla(event) {
+      this.ultimaTecla  = event.key;
+      this.ultimoCodigo = event.code;
+      this.totalTeclas++;
+    },
+
+    /* MÉTODO: registrarMouse
+       DETECCIÓN DE EVENTO DE MOUSE
+       Recibe MouseEvent y actualiza coordenadas relativas al elemento. */
+    registrarMouse(event) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      this.mouseX = Math.round(event.clientX - rect.left);
+      this.mouseY = Math.round(event.clientY - rect.top);
+      this.mouseEnZona = true;
+    },
+
+    /* MÉTODO: emitirEvento
+       EMISIÓN DE EVENTO — simula $emit de un componente hijo.
+       Agrega una entrada al log con tipo, mensaje y hora. */
+    emitirEvento(tipo, msg) {
+      const ahora = new Date();
+      const hora = `${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')}:${String(ahora.getSeconds()).padStart(2,'0')}`;
+      /* ESCUCHA DE EVENTO — el "padre" recibe y registra en logEventos */
+      this.logEventos.push({ tipo, msg, hora });
+      /* Limitar el log a 50 entradas */
+      if (this.logEventos.length > 50) this.logEventos.shift();
+    },
+
+    /* MÉTODO: limpiarLog */
+    limpiarLog() {
+      this.logEventos = [];
+    },
+
+    /* MÉTODO: enviarFormulario
+       EJECUCIÓN DE MÉTODO EN UN EVENTO (@click del botón submit)
+       PERSISTENCIA DE DATOS — guarda el form en localStorage (JSON.stringify)
+       y actualiza datosGuardados para mostrarlo en pantalla. */
+    enviarFormulario() {
+      if (!this.formularioValido) return;
+      const payload = { ...this.form, _guardadoEn: new Date().toLocaleString() };
+      /* PERSISTENCIA: serializa y guarda */
+      localStorage.setItem('vue_form_data', JSON.stringify(payload));
+      this.datosGuardados = payload;
+      this.emitirEvento('success', 'Formulario persistido en localStorage');
+      /* Mostrar toast */
+      this.toastVisible  = true;
+      this.toastSaliendo = false;
+      setTimeout(() => { this.toastSaliendo = true; }, 2200);
+      setTimeout(() => { this.toastVisible  = false; this.toastSaliendo = false; }, 2600);
+    },
+
+    /* MÉTODO: resetearFormulario
+       Limpia todos los campos del formulario y datos guardados en memoria.
+       (No borra localStorage para preservar la demo de reconstrucción) */
+    resetearFormulario() {
+      this.form = { nombre:'', email:'', edad:'', profesion:'', especialidad:'', mensaje:'' };
+      this.emitirEvento('warn', 'Formulario reseteado (localStorage preservado)');
+    },
+
+    /* MÉTODO: cargarDesdePersistencia
+       RECONSTRUCCIÓN DE ESTADO DEL FORMULARIO
+       Se llama en created() para restaurar datos guardados. */
+    cargarDesdePersistencia() {
+      const raw = localStorage.getItem('vue_form_data');
+      if (!raw) return;
+      try {
+        const datos = JSON.parse(raw);
+        /* Reconstruye el formulario con los datos guardados */
+        this.form.nombre       = datos.nombre       || '';
+        this.form.email        = datos.email        || '';
+        this.form.edad         = datos.edad         || '';
+        this.form.profesion    = datos.profesion    || '';
+        this.form.especialidad = datos.especialidad || '';
+        this.form.mensaje      = datos.mensaje      || '';
+        this.datosGuardados = datos;
+        this.emitirEvento('info', 'Estado del formulario reconstruido desde localStorage');
+      } catch(e) {
+        console.warn('Error al reconstruir estado:', e);
+      }
+    }
+  },
+
+  /* ── CREATED: Hook de ciclo de vida ──────────────────────────────── */
+  created() {
+    /* Aplica el tema guardado al elemento <html> desde el inicio */
+    document.documentElement.setAttribute('data-theme', this.tema);
+    this.cargarDesdePersistencia();
+    this.emitirEvento('info', 'Aplicación iniciada · estado reconstruido');
+  }
+
+}).mount('#app');
+</script>
+</body>
+</html>

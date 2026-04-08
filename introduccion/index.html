@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Introducción a Vue JS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    /* ===== CSS VARIABLES: Temas claro y oscuro ===== */
+    :root {
+      --bg: #f0ece3;
+      --surface: #ffffff;
+      --surface2: #e8e2d6;
+      --text: #1a1612;
+      --text-muted: #6b6057;
+      --accent: #3d6b4f;      /* Verde Vue */
+      --accent2: #41b883;     /* Verde brillante Vue */
+      --accent3: #c8480d;
+      --border: #cec8bc;
+      --shadow: rgba(0,0,0,0.08);
+      --nav-bg: rgba(240,236,227,0.92);
+      --tag-bg: #dff0e7;
+      --tag-text: #1f5c37;
+      --code-bg: #2b2b2b;
+      --code-text: #e8e2d6;
+      --transition: 0.35s cubic-bezier(.4,0,.2,1);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f1211;
+      --surface: #171e1a;
+      --surface2: #1e2922;
+      --text: #e8ede9;
+      --text-muted: #7a9985;
+      --accent: #41b883;
+      --accent2: #67d9a4;
+      --accent3: #e8724a;
+      --border: #2a3a30;
+      --shadow: rgba(0,0,0,0.4);
+      --nav-bg: rgba(15,18,17,0.94);
+      --tag-bg: #1a3326;
+      --tag-text: #67d9a4;
+      --code-bg: #0a0f0c;
+      --code-text: #a8d8bc;
+    }
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background var(--transition), color var(--transition);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== NAVBAR ===== */
+    /* Barra de navegación fija con efecto blur */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      background: var(--nav-bg);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--accent2);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .nav-logo span {
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 400;
+      opacity: 0.6;
+    }
+
+    /* Menú de navegación desktop */
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent2);
+      background: var(--tag-bg);
+    }
+
+    /* Controles derecha navbar: tema + hamburguesa */
+    .nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* Botón cambio de tema */
+    .theme-toggle {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 50px;
+      width: 60px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: background var(--transition), border-color var(--transition);
+      overflow: hidden;
+    }
+
+    .theme-toggle::before {
+      content: '';
+      position: absolute;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--accent2);
+      left: 4px;
+      transition: transform var(--transition), background var(--transition);
+    }
+
+    [data-theme="dark"] .theme-toggle::before {
+      transform: translateX(30px);
+    }
+
+    .theme-toggle .icon-sun,
+    .theme-toggle .icon-moon {
+      position: absolute;
+      font-size: 0.8rem;
+      transition: opacity 0.3s;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .theme-toggle .icon-sun { left: 7px; opacity: 1; }
+    .theme-toggle .icon-moon { right: 7px; opacity: 0; }
+
+    [data-theme="dark"] .theme-toggle .icon-sun { opacity: 0; }
+    [data-theme="dark"] .theme-toggle .icon-moon { opacity: 1; }
+
+    /* Botón hamburguesa (solo mobile) */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 6px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .hamburger:hover { background: var(--surface2); }
+
+    .hamburger .bar {
+      width: 24px; height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.35s, opacity 0.35s, background var(--transition);
+    }
+
+    /* Hamburguesa activa → X */
+    .hamburger.open .bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open .bar:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .hamburger.open .bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* Menú móvil desplegable */
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.5rem 1.5rem 1rem;
+      transition: background var(--transition);
+    }
+
+    .mobile-menu.open { display: flex; }
+
+    .mobile-menu a {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+      transition: color 0.2s;
+    }
+
+    .mobile-menu a:last-child { border-bottom: none; }
+    .mobile-menu a:hover { color: var(--accent2); }
+
+    /* ===== HERO ===== */
+    .hero {
+      padding: 120px 1.5rem 80px;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent2);
+      background: var(--tag-bg);
+      border: 1px solid var(--accent);
+      padding: 0.35rem 0.9rem;
+      border-radius: 50px;
+      margin-bottom: 1.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent2);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.0;
+      letter-spacing: -0.04em;
+      margin-bottom: 1.2rem;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent2);
+    }
+
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 2rem;
+    }
+
+    /* Tarjeta de métricas hero */
+    .hero-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 40px var(--shadow);
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(65,184,131,0.15), transparent 70%);
+    }
+
+    .vue-logo {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 1rem;
+      background: var(--surface2);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-item .num {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.5rem;
+      color: var(--accent2);
+      font-weight: 700;
+      display: block;
+    }
+
+    .stat-item .lbl {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* ===== SECCIÓN GENÉRICA ===== */
+    section {
+      padding: 80px 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      scroll-margin-top: 80px;
+    }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--accent2);
+      margin-bottom: 0.75rem;
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+      line-height: 1.1;
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 1rem;
+      max-width: 600px;
+      line-height: 1.7;
+      margin-bottom: 3rem;
+    }
+
+    /* Separador */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 1.5rem;
+    }
+
+    /* ===== TARJETAS DE CONCEPTO ===== */
+    /* Cada tarjeta representa un tema de Vue JS */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .concept-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      position: relative;
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      overflow: hidden;
+    }
+
+    .concept-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(65,184,131,0.05), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .concept-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 48px var(--shadow);
+      border-color: var(--accent);
+    }
+
+    .concept-card:hover::after { opacity: 1; }
+
+    .card-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .card-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--tag-text);
+      background: var(--tag-bg);
+      padding: 0.25rem 0.65rem;
+      border-radius: 50px;
+      display: inline-block;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.02em;
+    }
+
+    .card-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    /* ===== BLOQUES DE CÓDIGO ===== */
+    /* Código comentado que muestra cada concepto de Vue */
+    .code-block {
+      background: var(--code-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      margin: 2.5rem 0;
+      border: 1px solid var(--border);
+      font-family: 'Space Mono', monospace;
+    }
+
+    .code-header {
+      padding: 0.85rem 1.25rem;
+      background: rgba(255,255,255,0.04);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .code-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+
+    .code-filename {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.4);
+      margin-left: auto;
+    }
+
+    .code-body {
+      padding: 1.5rem;
+      overflow-x: auto;
+      font-size: 0.78rem;
+      line-height: 1.8;
+      color: var(--code-text);
+    }
+
+    .code-body .c  { color: #7a8c7e; }           /* comentario */
+    .code-body .k  { color: #c792ea; }           /* keyword */
+    .code-body .s  { color: #c3e88d; }           /* string */
+    .code-body .t  { color: #ffcb6b; }           /* tag html */
+    .code-body .p  { color: #89ddff; }           /* propiedad */
+    .code-body .v  { color: #f78c6c; }           /* valor */
+    .code-body .fn { color: #82aaff; }           /* función */
+    .code-body .n  { color: #41b883; }           /* nombre/variable */
+
+    /* ===== TIMELINE - CICLO DE VIDA ===== */
+    /* Representación visual del ciclo de vida de un componente Vue */
+    .timeline {
+      position: relative;
+      padding-left: 2rem;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0.65rem;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--accent2), var(--accent3));
+      border-radius: 2px;
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 2rem;
+      padding: 1.5rem 1.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+
+    .timeline-item:hover {
+      border-color: var(--accent);
+      transform: translateX(6px);
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -2.4rem;
+      top: 1.4rem;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--accent2);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 0 2px var(--accent2);
+    }
+
+    .tl-phase {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent3);
+      margin-bottom: 0.4rem;
+    }
+
+    .tl-hook {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .tl-hook code {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--accent2);
+      background: var(--tag-bg);
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+    }
+
+    .tl-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    .tl-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    /* ===== SPA DEMO INTERACTIVA ===== */
+    /* Demostración de Single Page Application */
+    .spa-demo {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 12px 48px var(--shadow);
+    }
+
+    .spa-topbar {
+      background: var(--surface2);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .spa-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    .spa-url {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      background: var(--bg);
+      padding: 0.3rem 0.8rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      margin-left: 0.5rem;
+      transition: color 0.3s;
+    }
+
+    .spa-nav {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .spa-tab {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+    }
+
+    .spa-tab:hover { color: var(--accent2); background: var(--tag-bg); }
+    .spa-tab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+
+    .spa-content {
+      padding: 2rem;
+      min-height: 180px;
+    }
+
+    .spa-view { display: none; }
+    .spa-view.active {
+      display: block;
+      animation: fadeIn 0.35s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .spa-view h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--accent2);
+    }
+
+    .spa-view p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* ===== VENTAJAS SPA ===== */
+    .advantages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .adv-card {
+      padding: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      text-align: center;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+
+    .adv-card:hover { border-color: var(--accent2); transform: translateY(-3px); }
+
+    .adv-icon { font-size: 2.2rem; margin-bottom: 0.75rem; }
+    .adv-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.5rem; }
+    .adv-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* ===== REACTIVITY DEMO ===== */
+    /* Demo interactiva de reactividad en Vue */
+    .reactive-demo {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .reactive-demo .controls { flex: 1; min-width: 200px; }
+    .reactive-demo .output   { flex: 1; min-width: 200px; }
+
+    .r-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .r-counter {
+      font-family: 'Space Mono', monospace;
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: var(--accent2);
+      transition: transform 0.15s, color 0.15s;
+    }
+
+    .r-counter.bump {
+      transform: scale(1.2);
+      color: var(--accent3);
+    }
+
+    .r-btns { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+
+    .r-btn {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      padding: 0.55rem 1.1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      transition: all 0.2s;
+      font-weight: 700;
+    }
+
+    .r-btn:hover { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+    .r-btn.primary { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+    .r-btn.primary:hover { background: var(--accent); }
+
+    .r-info {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      padding: 1rem;
+      background: var(--surface2);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 1.5rem;
+      text-align: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    footer strong { color: var(--accent2); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      /* Ocultar links desktop, mostrar hamburguesa */
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+
+      .hero {
+        grid-template-columns: 1fr;
+        padding-top: 100px;
+      }
+
+      .hero-card { max-width: 400px; }
+
+      .tl-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 2.2rem; }
+      section { padding: 56px 1rem; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .advantages-grid { grid-template-columns: 1fr 1fr; }
+      .reactive-demo { flex-direction: column; }
+      .nav-inner { padding: 0 1rem; }
+    }
+
+    @media (max-width: 400px) {
+      .advantages-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ====================================================
+       NAVBAR
+       Navegación principal con:
+       - Logo Vue
+       - Links de secciones (desktop)
+       - Toggle de tema claro/oscuro
+       - Menú hamburguesa (mobile)
+  ===================================================== -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+
+      <!-- Logo -->
+      <a class="nav-logo" href="#">
+        ▲ Vue JS <span>/ Guía Práctica</span>
+      </a>
+
+      <!-- Links desktop -->
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#componentes">Componentes</a></li>
+        <li><a href="#virtual-dom">DOM Virtual</a></li>
+        <li><a href="#reactividad">Reactividad</a></li>
+        <li><a href="#spa">SPAs</a></li>
+        <li><a href="#ciclo-vida">Ciclo de Vida</a></li>
+      </ul>
+
+      <div class="nav-controls">
+        <!-- Botón cambio de tema: alterna entre light y dark -->
+        <button class="theme-toggle" id="themeToggle" title="Cambiar tema" aria-label="Cambiar tema">
+          <span class="icon-sun">☀️</span>
+          <span class="icon-moon">🌙</span>
+        </button>
+
+        <!-- Hamburguesa: visible en pantallas < 900px -->
+        <button class="hamburger" id="hamburger" aria-label="Menú de navegación">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Menú móvil desplegable -->
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="#componentes" onclick="closeMobile()">🧩 Componentes</a>
+      <a href="#virtual-dom" onclick="closeMobile()">🔄 DOM Virtual</a>
+      <a href="#reactividad" onclick="closeMobile()">⚡ Reactividad</a>
+      <a href="#spa" onclick="closeMobile()">🗂️ SPAs</a>
+      <a href="#ciclo-vida" onclick="closeMobile()">🔁 Ciclo de Vida</a>
+    </div>
+  </nav>
+
+
+  <!-- ====================================================
+       HERO
+       Presentación principal del proyecto educativo
+  ===================================================== -->
+  <div class="hero">
+    <div>
+      <div class="hero-badge">Framework Progresivo</div>
+      <h1>Introducción a <em>Vue.js</em></h1>
+      <p>
+        Aprende las bases del framework progresivo de JavaScript:
+        componentes, reactividad, ciclo de vida, DOM virtual y
+        aplicaciones SPA del mundo real, con ejemplos prácticos comentados.
+      </p>
+    </div>
+
+    <div class="hero-card">
+      <span class="vue-logo">💚</span>
+      <p style="font-size:0.875rem; color: var(--text-muted); line-height:1.7;">
+        <strong style="color:var(--text)">Vue.js</strong> es un framework de JavaScript
+        de código abierto, orientado a la construcción de interfaces de usuario
+        y aplicaciones de una sola página (SPAs).
+      </p>
+      <div class="stat-grid">
+        <div class="stat-item">
+          <span class="num">46M+</span>
+          <span class="lbl">descargas/mes</span>
+        </div>
+        <div class="stat-item">
+          <span class="num">v3.x</span>
+          <span class="lbl">versión actual</span>
+        </div>
+        <div class="stat-item">
+          <span class="num">207K</span>
+          <span class="lbl">GitHub ⭐</span>
+        </div>
+        <div class="stat-item">
+          <span class="num">~25KB</span>
+          <span class="lbl">tamaño gzip</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+
+  <!-- ====================================================
+       SECCIÓN 1: ESTRUCTURA COMPONENTIZADA
+       Una app Vue se divide en componentes reutilizables.
+       Cada componente = template + script + styles.
+  ===================================================== -->
+  <section id="componentes">
+    <div class="section-label">01 — Estructura</div>
+    <h2 class="section-title">Aplicación Componentizada</h2>
+    <p class="section-desc">
+      En Vue, toda la interfaz se construye con <strong>componentes</strong>:
+      bloques autónomos que encapsulan su propio template, lógica y estilos.
+      La app raíz es un árbol de componentes anidados.
+    </p>
+
+    <!-- Visualización de jerarquía de componentes -->
+    <div class="cards-grid">
+
+      <!-- Tarjeta: App raíz -->
+      <div class="concept-card">
+        <span class="card-icon">🌳</span>
+        <span class="card-tag">App Root</span>
+        <h3 class="card-title">App como árbol de componentes</h3>
+        <p class="card-desc">
+          La instancia raíz <code>&lt;App /&gt;</code> monta toda la aplicación.
+          Cada componente hijo puede tener sus propios hijos, formando un árbol.
+          Esto facilita la separación de responsabilidades y el mantenimiento.
+        </p>
+      </div>
+
+      <!-- Tarjeta: Single File Component -->
+      <div class="concept-card">
+        <span class="card-icon">📄</span>
+        <span class="card-tag">SFC</span>
+        <h3 class="card-title">Single File Component (.vue)</h3>
+        <p class="card-desc">
+          Un <em>.vue</em> agrupa en un único archivo:
+          <strong>&lt;template&gt;</strong> (HTML),
+          <strong>&lt;script&gt;</strong> (lógica JS) y
+          <strong>&lt;style&gt;</strong> (CSS). Esto promueve la cohesión
+          y facilita el razonamiento sobre el componente.
+        </p>
+      </div>
+
+      <!-- Tarjeta: Props y Eventos -->
+      <div class="concept-card">
+        <span class="card-icon">🔗</span>
+        <span class="card-tag">Comunicación</span>
+        <h3 class="card-title">Props & Eventos</h3>
+        <p class="card-desc">
+          Los componentes se comunican con <strong>props</strong> (datos del padre al hijo)
+          y <strong>emit</strong> (eventos del hijo al padre).
+          Esta unidireccionalidad hace el flujo de datos predecible.
+        </p>
+      </div>
+    </div>
+
+    <!-- Ejemplo de código: SFC comentado -->
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-dot" style="background:#ff5f57"></span>
+        <span class="code-dot" style="background:#ffbd2e"></span>
+        <span class="code-dot" style="background:#28ca41"></span>
+        <span class="code-filename">MiComponente.vue</span>
+      </div>
+      <div class="code-body"><pre>
+<span class="c">&lt;!-- TEMPLATE: Define la estructura HTML del componente --&gt;</span>
+<span class="t">&lt;template&gt;</span>
+  <span class="t">&lt;div</span> <span class="p">class</span>=<span class="s">"tarjeta"</span><span class="t">&gt;</span>
+    <span class="c">&lt;!-- Interpolación reactiva: muestra el valor de 'titulo' --&gt;</span>
+    <span class="t">&lt;h2&gt;</span>{{ titulo }}<span class="t">&lt;/h2&gt;</span>
+
+    <span class="c">&lt;!-- v-if: renderizado condicional --&gt;</span>
+    <span class="t">&lt;p</span> <span class="p">v-if</span>=<span class="s">"visible"</span><span class="t">&gt;</span>{{ descripcion }}<span class="t">&lt;/p&gt;</span>
+
+    <span class="c">&lt;!-- @click: manejo de eventos, llama a 'alternar()' --&gt;</span>
+    <span class="t">&lt;button</span> <span class="p">@click</span>=<span class="s">"alternar"</span><span class="t">&gt;</span>Mostrar/Ocultar<span class="t">&lt;/button&gt;</span>
+  <span class="t">&lt;/div&gt;</span>
+<span class="t">&lt;/template&gt;</span>
+
+<span class="c">&lt;!-- SCRIPT: Lógica del componente con Composition API --&gt;</span>
+<span class="t">&lt;script</span> <span class="p">setup</span><span class="t">&gt;</span>
+<span class="k">import</span> { <span class="n">ref</span> } <span class="k">from</span> <span class="s">'vue'</span>
+
+<span class="c">// defineProps: declara las propiedades que recibe del padre</span>
+<span class="k">const</span> <span class="n">props</span> = <span class="fn">defineProps</span>({
+  titulo: <span class="n">String</span>,       <span class="c">// prop 'titulo' de tipo String</span>
+  descripcion: <span class="n">String</span>  <span class="c">// prop 'descripcion' de tipo String</span>
+})
+
+<span class="c">// ref(): crea una referencia reactiva (estado interno del componente)</span>
+<span class="k">const</span> <span class="n">visible</span> = <span class="fn">ref</span>(<span class="k">false</span>)
+
+<span class="c">// Función que modifica el estado reactivo</span>
+<span class="k">function</span> <span class="fn">alternar</span>() {
+  <span class="n">visible</span>.value = !<span class="n">visible</span>.value  <span class="c">// el DOM se actualiza automáticamente</span>
+}
+<span class="t">&lt;/script&gt;</span>
+
+<span class="c">&lt;!-- STYLE SCOPED: CSS que solo aplica a ESTE componente --&gt;</span>
+<span class="t">&lt;style</span> <span class="p">scoped</span><span class="t">&gt;</span>
+<span class="n">.tarjeta</span> { padding: <span class="v">1rem</span>; border-radius: <span class="v">8px</span>; }
+<span class="t">&lt;/style&gt;</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+
+
+  <!-- ====================================================
+       SECCIÓN 2: DOM VIRTUAL
+       Vue usa un DOM Virtual (VDOM) para optimizar actualizaciones.
+       Compara el VDOM anterior con el nuevo y aplica solo los
+       cambios necesarios al DOM real (diffing/patching).
+  ===================================================== -->
+  <section id="virtual-dom">
+    <div class="section-label">02 — Rendimiento</div>
+    <h2 class="section-title">DOM Virtual & Componentes</h2>
+    <p class="section-desc">
+      El <strong>Virtual DOM</strong> es una representación en memoria del árbol real del DOM.
+      Vue calcula las diferencias (<em>diffing</em>) y aplica solo los cambios mínimos necesarios,
+      haciendo las actualizaciones eficientes.
+    </p>
+
+    <div class="cards-grid">
+      <div class="concept-card">
+        <span class="card-icon">🧠</span>
+        <span class="card-tag">VDOM</span>
+        <h3 class="card-title">¿Por qué Virtual DOM?</h3>
+        <p class="card-desc">
+          Manipular el DOM real es costoso. El VDOM actúa como buffer:
+          Vue compara el árbol virtual anterior con el nuevo, detecta
+          diferencias mínimas y las aplica en batch al DOM real.
+        </p>
+      </div>
+
+      <div class="concept-card">
+        <span class="card-icon">🔍</span>
+        <span class="card-tag">Diffing</span>
+        <h3 class="card-title">Algoritmo de reconciliación</h3>
+        <p class="card-desc">
+          Vue 3 usa un algoritmo de diffing optimizado con <code>key</code>.
+          Al identificar nodos únicos, puede reutilizar elementos DOM
+          existentes en lugar de recrearlos desde cero.
+        </p>
+      </div>
+
+      <div class="concept-card">
+        <span class="card-icon">⚙️</span>
+        <span class="card-tag">Renderer</span>
+        <h3 class="card-title">Renderizador personalizable</h3>
+        <p class="card-desc">
+          Vue 3 separa el núcleo reactivo del renderizador. Esto permite
+          usar Vue para render en Canvas, WebGL, nativo (Vue Native) o
+          cualquier entorno distinto al navegador.
+        </p>
+      </div>
+    </div>
+
+    <!-- Diagrama de flujo VDOM -->
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-dot" style="background:#ff5f57"></span>
+        <span class="code-dot" style="background:#ffbd2e"></span>
+        <span class="code-dot" style="background:#28ca41"></span>
+        <span class="code-filename">Flujo de actualización Vue</span>
+      </div>
+      <div class="code-body"><pre>
+<span class="c">/*
+  FLUJO DEL VIRTUAL DOM EN VUE 3:
+
+  [Estado cambia]
+       │
+       ▼
+  [Función de render → genera nuevo VNode Tree]
+       │
+       ▼
+  [Diff Algorithm → compara VNode anterior vs nuevo]
+       │
+       ▼
+  [Patch → aplica SOLO las diferencias al DOM real]
+       │
+       ▼
+  [DOM actualizado eficientemente] ✅
+*/</span>
+
+<span class="c">// Ejemplo: VNode (nodo del Virtual DOM)</span>
+<span class="k">const</span> <span class="n">vnode</span> = {
+  type: <span class="s">'div'</span>,           <span class="c">// tipo de elemento</span>
+  props: {
+    <span class="p">class</span>: <span class="s">'tarjeta'</span>,    <span class="c">// atributos/propiedades</span>
+    <span class="p">id</span>: <span class="s">'main'</span>
+  },
+  children: [            <span class="c">// nodos hijos</span>
+    { type: <span class="s">'h1'</span>, children: <span class="s">'Hola Vue'</span> },
+    { type: <span class="s">'p'</span>,  children: <span class="s">'DOM Virtual'</span> }
+  ]
+}
+
+<span class="c">// Vue convierte el template en una función render:</span>
+<span class="k">function</span> <span class="fn">render</span>() {
+  <span class="k">return</span> <span class="fn">h</span>(<span class="s">'div'</span>, { class: <span class="s">'tarjeta'</span> }, [
+    <span class="fn">h</span>(<span class="s">'h1'</span>, <span class="k">null</span>, estado.titulo),  <span class="c">// reactivo al estado</span>
+    <span class="fn">h</span>(<span class="s">'p'</span>,  <span class="k">null</span>, estado.texto)
+  ])
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+
+
+  <!-- ====================================================
+       SECCIÓN 3: REACTIVIDAD
+       Vue detecta cambios en datos y actualiza el DOM
+       automáticamente usando Proxy (Vue 3).
+  ===================================================== -->
+  <section id="reactividad">
+    <div class="section-label">03 — Reactividad</div>
+    <h2 class="section-title">Aplicaciones Reactivas del Mundo Real</h2>
+    <p class="section-desc">
+      El sistema reactivo de Vue 3 usa <strong>Proxy</strong> para interceptar
+      accesos y mutaciones de datos. Cuando un dato cambia, Vue sabe exactamente
+      qué partes del DOM actualizar.
+    </p>
+
+    <!-- Demo interactiva de reactividad -->
+    <div class="reactive-demo">
+      <div class="controls">
+        <div class="r-label">Estado reactivo: contador</div>
+        <div class="r-counter" id="counter">0</div>
+        <div class="r-btns">
+          <button class="r-btn primary" onclick="increment()">+ Incrementar</button>
+          <button class="r-btn" onclick="decrement()">− Decrementar</button>
+          <button class="r-btn" onclick="resetCounter()">↺ Reset</button>
+        </div>
+      </div>
+      <div class="output">
+        <div class="r-label">Datos derivados reactivos</div>
+        <div class="r-info" id="reactiveInfo">
+          contador.value: <strong id="valRaw">0</strong><br/>
+          doble (computed): <strong id="valDouble">0</strong><br/>
+          cuadrado (computed): <strong id="valSquare">0</strong><br/>
+          es par (computed): <strong id="valEven">Sí</strong><br/>
+          último cambio: <strong id="valTime">—</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ejemplo de código de reactividad -->
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-dot" style="background:#ff5f57"></span>
+        <span class="code-dot" style="background:#ffbd2e"></span>
+        <span class="code-dot" style="background:#28ca41"></span>
+        <span class="code-filename">reactividad.js — Composition API Vue 3</span>
+      </div>
+      <div class="code-body"><pre>
+<span class="k">import</span> { <span class="n">ref</span>, <span class="n">reactive</span>, <span class="n">computed</span>, <span class="n">watch</span> } <span class="k">from</span> <span class="s">'vue'</span>
+
+<span class="c">// ref(): envuelve primitivos en un objeto reactivo</span>
+<span class="c">// Acceso mediante .value en el script</span>
+<span class="k">const</span> <span class="n">contador</span> = <span class="fn">ref</span>(<span class="v">0</span>)
+
+<span class="c">// reactive(): hace reactivo un objeto completo (sin .value)</span>
+<span class="k">const</span> <span class="n">usuario</span> = <span class="fn">reactive</span>({
+  nombre: <span class="s">'Ana'</span>,
+  edad: <span class="v">25</span>,
+  activo: <span class="k">true</span>
+})
+
+<span class="c">// computed(): valores derivados que se recalculan automáticamente</span>
+<span class="c">// Solo se ejecuta si sus dependencias cambian (memoizado)</span>
+<span class="k">const</span> <span class="n">doble</span>    = <span class="fn">computed</span>(() => <span class="n">contador</span>.value * <span class="v">2</span>)
+<span class="k">const</span> <span class="n">cuadrado</span> = <span class="fn">computed</span>(() => <span class="n">contador</span>.value ** <span class="v">2</span>)
+<span class="k">const</span> <span class="n">esPar</span>    = <span class="fn">computed</span>(() => <span class="n">contador</span>.value % <span class="v">2</span> === <span class="v">0</span>)
+
+<span class="c">// watch(): reacciona a cambios con lógica personalizada</span>
+<span class="c">// Útil para llamadas API, guardado en localStorage, etc.</span>
+<span class="fn">watch</span>(<span class="n">contador</span>, (nuevoValor, valorAnterior) => {
+  <span class="n">console</span>.<span class="fn">log</span>(<span class="s">`Cambió de ${valorAnterior} → ${nuevoValor}`</span>)
+  <span class="c">// Aquí iría lógica como fetch() o guardar en BD</span>
+})
+
+<span class="c">// watchEffect(): se ejecuta inmediatamente y rastrea</span>
+<span class="c">// automáticamente sus dependencias reactivas</span>
+<span class="fn">watchEffect</span>(() => {
+  document.<span class="fn">title</span> = <span class="s">`Contador: ${contador.value}`</span>
+})</pre>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+
+
+  <!-- ====================================================
+       SECCIÓN 4: SPAs (Single Page Applications)
+       Una SPA carga una sola página HTML y actualiza el
+       contenido dinámicamente sin recargar el navegador,
+       usando Vue Router para gestionar las rutas.
+  ===================================================== -->
+  <section id="spa">
+    <div class="section-label">04 — Arquitectura</div>
+    <h2 class="section-title">Concepto y Creación de SPAs</h2>
+    <p class="section-desc">
+      Una <strong>Single Page Application</strong> carga una única página HTML y reemplaza
+      el contenido dinámicamente al navegar. <em>Vue Router</em> gestiona las rutas del lado
+      del cliente, sin recargar el navegador.
+    </p>
+
+    <!-- Demo interactiva de SPA simulada -->
+    <div class="spa-demo">
+      <div class="spa-topbar">
+        <span class="spa-dot" style="background:#ff5f57"></span>
+        <span class="spa-dot" style="background:#ffbd2e"></span>
+        <span class="spa-dot" style="background:#28ca41"></span>
+        <span class="spa-url" id="spaUrl">http://miapp.com/#/inicio</span>
+      </div>
+
+      <div class="spa-nav">
+        <button class="spa-tab active" onclick="showView('inicio', this, '#/inicio')">🏠 Inicio</button>
+        <button class="spa-tab" onclick="showView('perfil', this, '#/perfil')">👤 Perfil</button>
+        <button class="spa-tab" onclick="showView('config', this, '#/configuracion')">⚙️ Config</button>
+        <button class="spa-tab" onclick="showView('about', this, '#/acerca')">ℹ️ Acerca</button>
+      </div>
+
+      <div class="spa-content">
+        <!-- Vista: Inicio -->
+        <div class="spa-view active" id="view-inicio">
+          <h3>🏠 Inicio — Vista Principal</h3>
+          <p>Esta es la vista de inicio de la SPA. <strong>No se recargó el navegador</strong> al navegar aquí.
+          Vue Router interceptó el cambio de ruta y reemplazó este componente dinámicamente.
+          El HTML base (index.html) nunca cambia.</p>
+        </div>
+        <!-- Vista: Perfil -->
+        <div class="spa-view" id="view-perfil">
+          <h3>👤 Perfil de Usuario</h3>
+          <p>Cada "página" es en realidad un <strong>componente Vue</strong> que se monta y desmonta.
+          Vue Router escucha el hash/history de la URL y decide qué componente renderizar
+          en el elemento <code>&lt;RouterView /&gt;</code>.</p>
+        </div>
+        <!-- Vista: Config -->
+        <div class="spa-view" id="view-config">
+          <h3>⚙️ Configuración</h3>
+          <p>Las rutas se definen en un objeto de configuración: <code>{ path: '/config', component: Config }</code>.
+          Supports rutas anidadas, parámetros dinámicos (<code>/user/:id</code>),
+          guards de navegación y carga lazy.</p>
+        </div>
+        <!-- Vista: Acerca -->
+        <div class="spa-view" id="view-about">
+          <h3>ℹ️ Acerca de esta SPA</h3>
+          <p>Vue Router usa la <strong>History API</strong> del navegador para cambiar la URL
+          sin recargar. En modo hash (<code>#/ruta</code>) funciona sin configuración
+          de servidor. En modo HTML5 requiere reescritura de URLs en el servidor.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ventajas de SPAs -->
+    <h3 style="font-size:1.4rem; font-weight:700; margin: 3rem 0 1.5rem; letter-spacing:-0.02em;">
+      Ventajas de las SPAs
+    </h3>
+    <div class="advantages-grid">
+      <div class="adv-card">
+        <div class="adv-icon">⚡</div>
+        <div class="adv-title">Navegación rápida</div>
+        <div class="adv-desc">Sin recargas de página: solo cambia el componente necesario. Experiencia fluida tipo app nativa.</div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-icon">📦</div>
+        <div class="adv-title">Separación frontend/backend</div>
+        <div class="adv-desc">El backend solo expone una API REST/GraphQL. El frontend consume datos y renderiza independientemente.</div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-icon">🔄</div>
+        <div class="adv-title">Menor carga en servidor</div>
+        <div class="adv-desc">El servidor no genera HTML en cada petición. Solo sirve datos JSON, reduciendo el procesamiento.</div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-icon">🧩</div>
+        <div class="adv-title">Reutilización de componentes</div>
+        <div class="adv-desc">Los componentes Vue se reutilizan entre vistas. Un Navbar o Button definido una vez se usa en toda la app.</div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-icon">📱</div>
+        <div class="adv-title">PWA ready</div>
+        <div class="adv-desc">Las SPAs se convierten fácilmente en Progressive Web Apps con Vite PWA plugin y Service Workers.</div>
+      </div>
+      <div class="adv-card">
+        <div class="adv-icon">🛠️</div>
+        <div class="adv-title">Dev Experience superior</div>
+        <div class="adv-desc">Hot Module Replacement (HMR): los cambios en código se reflejan al instante sin perder el estado.</div>
+      </div>
+    </div>
+
+    <!-- Código de configuración de rutas Vue Router -->
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-dot" style="background:#ff5f57"></span>
+        <span class="code-dot" style="background:#ffbd2e"></span>
+        <span class="code-dot" style="background:#28ca41"></span>
+        <span class="code-filename">router/index.js — Configuración Vue Router</span>
+      </div>
+      <div class="code-body"><pre>
+<span class="k">import</span> { <span class="n">createRouter</span>, <span class="n">createWebHistory</span> } <span class="k">from</span> <span class="s">'vue-router'</span>
+
+<span class="c">// Lazy loading: los componentes se importan solo cuando se necesitan</span>
+<span class="c">// Esto mejora el tiempo de carga inicial (code splitting)</span>
+<span class="k">const</span> <span class="n">Inicio</span>  = () => <span class="k">import</span>(<span class="s">'@/views/Inicio.vue'</span>)
+<span class="k">const</span> <span class="n">Perfil</span>  = () => <span class="k">import</span>(<span class="s">'@/views/Perfil.vue'</span>)
+<span class="k">const</span> <span class="n">Config</span>  = () => <span class="k">import</span>(<span class="s">'@/views/Config.vue'</span>)
+
+<span class="c">// Definición de rutas: cada ruta mapea un path a un componente</span>
+<span class="k">const</span> <span class="n">routes</span> = [
+  { path: <span class="s">'/'</span>,       component: <span class="n">Inicio</span>,  name: <span class="s">'inicio'</span> },
+  { path: <span class="s">'/perfil'</span>, component: <span class="n">Perfil</span>,  name: <span class="s">'perfil'</span> },
+  { path: <span class="s">'/config'</span>, component: <span class="n">Config</span>,  name: <span class="s">'config'</span>,
+    <span class="c">// meta: información extra para guards de navegación</span>
+    meta: { requiresAuth: <span class="k">true</span> }
+  },
+  <span class="c">// Ruta con parámetro dinámico: /user/42, /user/juan</span>
+  { path: <span class="s">'/user/:id'</span>, component: () => <span class="k">import</span>(<span class="s">'@/views/User.vue'</span>) },
+  <span class="c">// Catch-all: cualquier ruta no definida → 404</span>
+  { path: <span class="s">'/:pathMatch(.*)*'</span>, component: () => <span class="k">import</span>(<span class="s">'@/views/404.vue'</span>) }
+]
+
+<span class="k">const</span> <span class="n">router</span> = <span class="fn">createRouter</span>({
+  history: <span class="fn">createWebHistory</span>(), <span class="c">// usa History API (sin #)</span>
+  routes
+})
+
+<span class="c">// Navigation Guard: se ejecuta ANTES de cada cambio de ruta</span>
+<span class="c">// Permite proteger rutas que requieren autenticación</span>
+<span class="n">router</span>.<span class="fn">beforeEach</span>((to, from, next) => {
+  <span class="k">if</span> (to.meta.requiresAuth && !<span class="fn">isAuthenticated</span>()) {
+    next({ name: <span class="s">'login'</span> })   <span class="c">// redirige si no está autenticado</span>
+  } <span class="k">else</span> {
+    <span class="fn">next</span>()                     <span class="c">// permite la navegación</span>
+  }
+})
+
+<span class="k">export default</span> <span class="n">router</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+
+
+  <!-- ====================================================
+       SECCIÓN 5: CICLO DE VIDA
+       Cada componente Vue atraviesa fases: creación,
+       montaje, actualización y desmontaje.
+       Los hooks permiten ejecutar código en cada fase.
+  ===================================================== -->
+  <section id="ciclo-vida">
+    <div class="section-label">05 — Ciclo de Vida</div>
+    <h2 class="section-title">Montaje, Actualización & Desactivación</h2>
+    <p class="section-desc">
+      Vue expone <strong>lifecycle hooks</strong> que permiten ejecutar código
+      en momentos específicos: antes/después de crear, montar, actualizar o destruir un componente.
+    </p>
+
+    <div class="tl-grid">
+      <!-- Columna izquierda: Creación y Montaje -->
+      <div>
+        <h3 style="font-family:'Space Mono',monospace; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:1.5rem;">
+          🟢 Creación &amp; Montaje
+        </h3>
+        <div class="timeline">
+
+          <!-- Hook: setup / onBeforeMount -->
+          <div class="timeline-item">
+            <div class="tl-phase">Creación</div>
+            <div class="tl-hook"><code>setup()</code> / <code>onBeforeMount</code></div>
+            <div class="tl-desc">
+              <strong>setup()</strong> es el punto de entrada de la Composition API.
+              Se ejecuta antes del montaje. Los datos reactivos, computed y watchers
+              se declaran aquí. El DOM aún NO existe en esta fase.
+            </div>
+          </div>
+
+          <!-- Hook: onMounted -->
+          <div class="timeline-item">
+            <div class="tl-phase">Montaje</div>
+            <div class="tl-hook"><code>onMounted()</code></div>
+            <div class="tl-desc">
+              El componente se insertó en el DOM. Aquí puedes acceder al DOM real
+              (<code>el.$refs</code>), hacer peticiones fetch() iniciales,
+              inicializar librerías de terceros (charts, mapas, etc).
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna derecha: Actualización y Desmontaje -->
+      <div>
+        <h3 style="font-family:'Space Mono',monospace; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent3); margin-bottom:1.5rem;">
+          🔄 Actualización &amp; Desactivación
+        </h3>
+        <div class="timeline">
+
+          <!-- Hook: onUpdated -->
+          <div class="timeline-item">
+            <div class="tl-phase">Actualización</div>
+            <div class="tl-hook"><code>onBeforeUpdate</code> / <code>onUpdated()</code></div>
+            <div class="tl-desc">
+              Se disparan cuando datos reactivos cambian y el DOM se re-renderiza.
+              <strong>onBeforeUpdate</strong>: DOM aún con valores anteriores.
+              <strong>onUpdated</strong>: DOM ya refleja el nuevo estado.
+            </div>
+          </div>
+
+          <!-- Hook: onActivated / onDeactivated -->
+          <div class="timeline-item">
+            <div class="tl-phase">Activación</div>
+            <div class="tl-hook"><code>onActivated</code> / <code>onDeactivated()</code></div>
+            <div class="tl-desc">
+              Solo aplica a componentes dentro de <code>&lt;KeepAlive&gt;</code>.
+              <strong>onActivated</strong>: el componente se muestra de nuevo (no se recreó).
+              <strong>onDeactivated</strong>: se oculta pero se mantiene en memoria.
+            </div>
+          </div>
+
+          <!-- Hook: onUnmounted -->
+          <div class="timeline-item">
+            <div class="tl-phase">Desmontaje</div>
+            <div class="tl-hook"><code>onBeforeUnmount</code> / <code>onUnmounted()</code></div>
+            <div class="tl-desc">
+              El componente se elimina del DOM. Aquí debes limpiar:
+              cancelar timers (<code>clearInterval</code>), remover event listeners,
+              cancelar peticiones en curso, desconectar WebSockets.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Código del ciclo de vida completo -->
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-dot" style="background:#ff5f57"></span>
+        <span class="code-dot" style="background:#ffbd2e"></span>
+        <span class="code-dot" style="background:#28ca41"></span>
+        <span class="code-filename">CicloDeVida.vue — Todos los hooks</span>
+      </div>
+      <div class="code-body"><pre>
+<span class="t">&lt;script</span> <span class="p">setup</span><span class="t">&gt;</span>
+<span class="k">import</span> {
+  <span class="n">ref</span>, <span class="n">onBeforeMount</span>, <span class="n">onMounted</span>,
+  <span class="n">onBeforeUpdate</span>, <span class="n">onUpdated</span>,
+  <span class="n">onBeforeUnmount</span>, <span class="n">onUnmounted</span>,
+  <span class="n">onActivated</span>, <span class="n">onDeactivated</span>,
+  <span class="n">onErrorCaptured</span>
+} <span class="k">from</span> <span class="s">'vue'</span>
+
+<span class="k">const</span> <span class="n">datos</span> = <span class="fn">ref</span>(<span class="k">null</span>)
+<span class="k">let</span>   <span class="n">timer</span> = <span class="k">null</span>
+
+<span class="c">// CREACIÓN: setup() se ejecuta primero, DOM no existe aún</span>
+<span class="fn">onBeforeMount</span>(() => {
+  console.<span class="fn">log</span>(<span class="s">'1. Antes del montaje — DOM no disponible'</span>)
+})
+
+<span class="c">// MONTAJE: DOM listo → ideal para fetch y librerías externas</span>
+<span class="fn">onMounted</span>(async () => {
+  console.<span class="fn">log</span>(<span class="s">'2. Componente montado — DOM disponible ✅'</span>)
+  <span class="n">datos</span>.value = <span class="k">await</span> <span class="fn">fetch</span>(<span class="s">'/api/datos'</span>).<span class="fn">then</span>(r => r.<span class="fn">json</span>())
+  <span class="c">// Iniciar timer (debe limpiarse en onUnmounted)</span>
+  <span class="n">timer</span> = <span class="fn">setInterval</span>(() => <span class="fn">actualizarDatos</span>(), <span class="v">5000</span>)
+})
+
+<span class="c">// ACTUALIZACIÓN: datos reactivos cambiaron, DOM se re-renderizará</span>
+<span class="fn">onBeforeUpdate</span>(() => {
+  console.<span class="fn">log</span>(<span class="s">'3. Antes de actualizar — DOM aún con valores viejos'</span>)
+})
+
+<span class="c">// ACTUALIZACIÓN COMPLETA: DOM sincronizado con el nuevo estado</span>
+<span class="fn">onUpdated</span>(() => {
+  console.<span class="fn">log</span>(<span class="s">'4. DOM actualizado — refleja el nuevo estado ✅'</span>)
+})
+
+<span class="c">// ACTIVACIÓN (KeepAlive): componente visible de nuevo sin recrearse</span>
+<span class="fn">onActivated</span>(() => {
+  console.<span class="fn">log</span>(<span class="s">'5. Componente activado (KeepAlive) — estado preservado'</span>)
+})
+
+<span class="c">// DESACTIVACIÓN (KeepAlive): componente oculto, pero en memoria</span>
+<span class="fn">onDeactivated</span>(() => {
+  console.<span class="fn">log</span>(<span class="s">'6. Componente desactivado — pausar procesos costosos'</span>)
+})
+
+<span class="c">// DESMONTAJE: limpiar recursos para evitar memory leaks</span>
+<span class="fn">onBeforeUnmount</span>(() => {
+  <span class="fn">clearInterval</span>(<span class="n">timer</span>)  <span class="c">// ⚠️ siempre limpiar timers</span>
+})
+
+<span class="fn">onUnmounted</span>(() => {
+  console.<span class="fn">log</span>(<span class="s">'7. Componente desmontado — memoria liberada 🧹'</span>)
+})
+
+<span class="c">// CAPTURA DE ERRORES: atrapa errores de componentes hijos</span>
+<span class="fn">onErrorCaptured</span>((error, instance, info) => {
+  console.<span class="fn">error</span>(<span class="s">'Error capturado:'</span>, error, info)
+  <span class="k">return false</span>  <span class="c">// false = no propagar el error hacia arriba</span>
+})
+<span class="t">&lt;/script&gt;</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider"/>
+
+  <!-- ====================================================
+       FOOTER
+  ===================================================== -->
+  <footer>
+    <p>Proyecto educativo — <strong>Introducción a Vue.js</strong></p>
+    <p style="margin-top:0.5rem; opacity:0.6;">
+      Estructura · DOM Virtual · Reactividad · SPAs · Ciclo de Vida
+    </p>
+  </footer>
+
+
+  <!-- ====================================================
+       JAVASCRIPT
+       Lógica de: tema, hamburguesa, SPA demo, contador
+  ===================================================== -->
+  <script>
+    // ─── TEMA: Claro / Oscuro ───────────────────────────────────────────
+    // Guarda preferencia en localStorage para persistencia entre sesiones
+    const html   = document.documentElement
+    const toggle = document.getElementById('themeToggle')
+
+    // Cargar tema guardado (o preferencia del sistema)
+    const savedTheme = localStorage.getItem('theme')
+      || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+
+    html.setAttribute('data-theme', savedTheme)
+
+    toggle.addEventListener('click', () => {
+      const current = html.getAttribute('data-theme')
+      const next    = current === 'dark' ? 'light' : 'dark'
+      html.setAttribute('data-theme', next)
+      localStorage.setItem('theme', next)  // persiste la preferencia
+    })
+
+    // ─── HAMBURGUESA: Menú móvil ────────────────────────────────────────
+    const hamburger  = document.getElementById('hamburger')
+    const mobileMenu = document.getElementById('mobileMenu')
+
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('open')
+      mobileMenu.classList.toggle('open')
+    })
+
+    // Cierra el menú al hacer clic en un enlace
+    function closeMobile() {
+      hamburger.classList.remove('open')
+      mobileMenu.classList.remove('open')
+    }
+
+    // ─── SPA DEMO: Simulación de navegación sin recarga ─────────────────
+    // Simula el comportamiento de Vue Router cambiando vistas
+    function showView(viewId, btn, route) {
+      // Ocultar todas las vistas
+      document.querySelectorAll('.spa-view').forEach(v => v.classList.remove('active'))
+      document.querySelectorAll('.spa-tab').forEach(t => t.classList.remove('active'))
+
+      // Mostrar la vista seleccionada
+      document.getElementById('view-' + viewId).classList.add('active')
+      btn.classList.add('active')
+
+      // Actualizar URL simulada (sin recargar)
+      document.getElementById('spaUrl').textContent = 'http://miapp.com/' + route
+    }
+
+    // ─── CONTADOR: Demo de reactividad ─────────────────────────────────
+    // Simula el sistema reactivo de Vue (ref + computed)
+    let count = 0
+
+    function updateUI() {
+      const el = document.getElementById('counter')
+      el.textContent = count
+      el.classList.add('bump')
+      setTimeout(() => el.classList.remove('bump'), 150)
+
+      // "computed" properties: se recalculan al cambiar el estado
+      document.getElementById('valRaw').textContent    = count
+      document.getElementById('valDouble').textContent = count * 2
+      document.getElementById('valSquare').textContent = count ** 2
+      document.getElementById('valEven').textContent   = count % 2 === 0 ? 'Sí ✅' : 'No ❌'
+      document.getElementById('valTime').textContent   = new Date().toLocaleTimeString()
+    }
+
+    function increment()    { count++; updateUI() }
+    function decrement()    { count--; updateUI() }
+    function resetCounter() { count = 0; updateUI() }
+  </script>
+</body>
+</html>

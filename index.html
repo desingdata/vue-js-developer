@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introducción a Vue.js — Proyecto Práctico</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Variables de tema claro/oscuro ── */
+    :root {
+      --bg: #f5f2eb;
+      --bg2: #eae6dd;
+      --card: #fffdf8;
+      --border: #c9c3b4;
+      --text: #1a1814;
+      --muted: #6b6558;
+      --accent: #e8500a;
+      --accent2: #2b7a4b;
+      --accent3: #2052a0;
+      --tag-bg: #fde8dc;
+      --tag-color: #b83d06;
+      --nav-bg: #1a1814;
+      --nav-text: #f5f2eb;
+      --code-bg: #1e1c18;
+      --code-text: #f5c842;
+      --shadow: 0 4px 24px rgba(30,28,24,.10);
+      --radius: 12px;
+      --transition: .3s cubic-bezier(.4,0,.2,1);
+    }
+    [data-theme="dark"] {
+      --bg: #111009;
+      --bg2: #1a1814;
+      --card: #1f1d18;
+      --border: #3a3830;
+      --text: #f0ece3;
+      --muted: #9a9283;
+      --accent: #ff6b2b;
+      --accent2: #3db865;
+      --accent3: #4d80d8;
+      --tag-bg: #2a1a0e;
+      --tag-color: #ff8c5a;
+      --nav-bg: #0a0908;
+      --nav-text: #f0ece3;
+      --code-bg: #0d0c0a;
+      --code-text: #f5c842;
+      --shadow: 0 4px 24px rgba(0,0,0,.4);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background var(--transition), color var(--transition);
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--nav-bg);
+      color: var(--nav-text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      height: 60px;
+      box-shadow: 0 2px 16px rgba(0,0,0,.25);
+    }
+    .nav-logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -.5px;
+      color: var(--accent);
+    }
+    .nav-logo span { color: var(--nav-text); }
+
+    /* Hamburger */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--nav-text);
+      border-radius: 2px;
+      transition: var(--transition);
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--nav-text);
+      text-decoration: none;
+      font-size: .82rem;
+      font-weight: 600;
+      padding: .4rem .75rem;
+      border-radius: 6px;
+      opacity: .75;
+      transition: opacity .2s, background .2s;
+    }
+    .nav-links a:hover { opacity: 1; background: rgba(255,255,255,.1); }
+
+    /* Tema toggle */
+    .theme-btn {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 20px;
+      padding: .3rem .8rem;
+      color: var(--nav-text);
+      font-family: 'Space Mono', monospace;
+      font-size: .75rem;
+      cursor: pointer;
+      transition: background .2s;
+      white-space: nowrap;
+    }
+    .theme-btn:hover { background: rgba(255,255,255,.2); }
+
+    /* Mobile menu */
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 0; right: 0;
+      background: var(--nav-bg);
+      z-index: 99;
+      flex-direction: column;
+      padding: 1rem 1.5rem 1.5rem;
+      gap: .5rem;
+      border-bottom: 2px solid var(--accent);
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      color: var(--nav-text);
+      text-decoration: none;
+      font-size: .95rem;
+      font-weight: 600;
+      padding: .6rem .5rem;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      opacity: .85;
+    }
+    .mobile-menu a:hover { opacity: 1; color: var(--accent); }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--nav-bg);
+      color: var(--nav-text);
+      padding: 4rem 2rem 3rem;
+      text-align: center;
+      border-bottom: 3px solid var(--accent);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 40px,
+        rgba(255,107,43,.03) 40px,
+        rgba(255,107,43,.03) 80px
+      );
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Space Mono', monospace;
+      font-size: .72rem;
+      padding: .3rem .9rem;
+      border-radius: 20px;
+      margin-bottom: 1.2rem;
+      letter-spacing: .5px;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 6vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: .8rem;
+    }
+    .hero h1 em { color: var(--accent); font-style: normal; }
+    .hero p {
+      font-size: 1.05rem;
+      opacity: .7;
+      max-width: 560px;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+
+    /* ── LAYOUT ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+    }
+
+    /* ── SECCIÓN ── */
+    .section {
+      margin-bottom: 3rem;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: .75rem;
+      border-bottom: 2px solid var(--border);
+    }
+    .section-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .icon-vue   { background: #e8f8ef; }
+    .icon-view  { background: #e8f0fc; }
+    .icon-beh   { background: #fff3e8; }
+    .icon-anim  { background: #fde8f5; }
+    [data-theme="dark"] .icon-vue  { background: #0e2318; }
+    [data-theme="dark"] .icon-view { background: #0d1a2e; }
+    [data-theme="dark"] .icon-beh  { background: #2a1800; }
+    [data-theme="dark"] .icon-anim { background: #2a0e22; }
+
+    .section-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+    }
+    .section-subtitle {
+      font-size: .85rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      margin-top: .15rem;
+    }
+
+    /* ── GRID DE TEMAS ── */
+    .topics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    .topic-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.2rem;
+      transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .topic-card:hover {
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+    .topic-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--accent);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .topic-card:hover::before { opacity: 1; }
+
+    .topic-name {
+      font-size: .95rem;
+      font-weight: 700;
+      margin-bottom: .4rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .topic-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+    .topic-def {
+      font-size: .82rem;
+      color: var(--muted);
+      line-height: 1.55;
+      font-weight: 400;
+    }
+
+    /* ── CODE BLOCK ── */
+    .code-block {
+      background: var(--code-bg);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+      overflow-x: auto;
+      border: 1px solid rgba(255,255,255,.06);
+    }
+    .code-block pre {
+      font-family: 'Space Mono', monospace;
+      font-size: .78rem;
+      line-height: 1.75;
+      color: var(--code-text);
+    }
+    .code-block .c  { color: #6b8a6b; } /* comment */
+    .code-block .k  { color: #c792ea; } /* keyword */
+    .code-block .s  { color: #c3e88d; } /* string */
+    .code-block .n  { color: #82aaff; } /* name */
+    .code-block .v  { color: #ffcb6b; } /* value */
+    .code-block .t  { color: #f78c6c; } /* tag */
+    .code-block .a  { color: #89ddf7; } /* attr */
+
+    /* ── LIFECYCLE ── */
+    .lifecycle {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: 1rem;
+    }
+    .lc-step {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .45rem .9rem;
+      font-family: 'Space Mono', monospace;
+      font-size: .75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      transition: var(--transition);
+    }
+    .lc-step:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .lc-arrow { color: var(--muted); font-size: .9rem; }
+
+    /* ── COMPARISON TABLE ── */
+    .table-wrap { overflow-x: auto; margin: 1rem 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .85rem;
+    }
+    th {
+      background: var(--bg2);
+      padding: .65rem 1rem;
+      text-align: left;
+      font-weight: 700;
+      border-bottom: 2px solid var(--border);
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      color: var(--muted);
+    }
+    td {
+      padding: .6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg2); }
+
+    /* ── TAG ── */
+    .tag {
+      display: inline-block;
+      background: var(--tag-bg);
+      color: var(--tag-color);
+      font-family: 'Space Mono', monospace;
+      font-size: .7rem;
+      padding: .15rem .55rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .tag.green { background: #e6f4ec; color: #1b6b38; }
+    .tag.blue  { background: #e0eaf9; color: #1d4a9e; }
+    [data-theme="dark"] .tag.green { background: #0e2318; color: #4cd882; }
+    [data-theme="dark"] .tag.blue  { background: #0d1a2e; color: #6da0f5; }
+
+    /* ── TIP BOX ── */
+    .tip {
+      background: var(--bg2);
+      border-left: 4px solid var(--accent2);
+      border-radius: 0 8px 8px 0;
+      padding: .8rem 1rem;
+      font-size: .85rem;
+      color: var(--muted);
+      margin: 1rem 0;
+    }
+    .tip strong { color: var(--text); }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: .8rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .hamburger { display: flex; }
+      .nav-links  { display: none; }
+      .hero { padding: 2.5rem 1.25rem 2rem; }
+      .container { padding: 2rem 1rem 4rem; }
+      .topics-grid { grid-template-columns: 1fr; }
+      .lifecycle { gap: .35rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     NAVBAR — barra de navegación fija con
+     menú hamburguesa en móvil y toggle de tema
+════════════════════════════════════════ -->
+<nav>
+  <div class="nav-logo">Vue<span>.js</span> &mdash; Proyecto</div>
+
+  <!-- Links visibles en escritorio -->
+  <ul class="nav-links">
+    <li><a href="#fundamentos">Fundamentos</a></li>
+    <li><a href="#vista">Vista</a></li>
+    <li><a href="#comportamientos">Comportamientos</a></li>
+    <li><a href="#animaciones">Animaciones</a></li>
+  </ul>
+
+  <div style="display:flex;align-items:center;gap:.75rem;">
+    <!-- Botón cambio de tema claro/oscuro -->
+    <button class="theme-btn" id="themeBtn" aria-label="Cambiar tema">🌙 Oscuro</button>
+    <!-- Botón hamburguesa (sólo móvil) -->
+    <button class="hamburger" id="hamburger" aria-label="Menú" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Menú móvil desplegable -->
+<div class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Menú móvil">
+  <a href="#fundamentos" onclick="closeMobile()">🟢 Fundamentos de Vue</a>
+  <a href="#vista"        onclick="closeMobile()">🔵 Vista</a>
+  <a href="#comportamientos" onclick="closeMobile()">🟠 Comportamientos</a>
+  <a href="#animaciones"  onclick="closeMobile()">🟣 Animaciones &amp; Utilidades</a>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     HERO — Encabezado principal del proyecto
+════════════════════════════════════════ -->
+<header class="hero">
+  <div class="hero-badge">Proyecto Práctico · 2025</div>
+  <h1>Introducción a <em>Vue.js</em></h1>
+  <p>Guía estructurada de conceptos, componentes, ciclo de vida, directivas, formularios, animaciones y herramientas.</p>
+</header>
+
+
+<div class="container">
+
+  <!-- ══════════════════════════════════
+       SECCIÓN 1 — FUNDAMENTOS DE VUE JS
+  ══════════════════════════════════════ -->
+  <section class="section" id="fundamentos">
+    <div class="section-header">
+      <div class="section-icon icon-vue">🟢</div>
+      <div>
+        <div class="section-title">Fundamentos de Vue.js</div>
+        <div class="section-subtitle">Arquitectura, componentes y ciclo de vida</div>
+      </div>
+    </div>
+
+    <!-- Temas con definición corta comentada en el código -->
+    <div class="topics-grid">
+
+      <!-- Estructura de una aplicación componentizada:
+           la app se divide en piezas reutilizables e independientes -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Estructura componentizada</div>
+        <div class="topic-def">La aplicación se divide en <strong>piezas reutilizables e independientes</strong> (componentes) que encapsulan su propia lógica, plantilla y estilos.</div>
+      </div>
+
+      <!-- DOM Virtual: Vue mantiene una copia ligera del DOM real
+           para optimizar las actualizaciones de la interfaz -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>DOM Virtual y componentes</div>
+        <div class="topic-def">Vue mantiene una <strong>representación ligera del DOM en memoria</strong>; al detectar cambios sólo actualiza los nodos necesarios, mejorando el rendimiento.</div>
+      </div>
+
+      <!-- Aplicaciones reactivas: cuando los datos cambian,
+           la vista se actualiza automáticamente sin manipulación manual del DOM -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Aplicaciones reactivas</div>
+        <div class="topic-def">Cuando los datos cambian, <strong>la vista se actualiza sola</strong>. Vue observa el estado y re-renderiza sólo las partes afectadas.</div>
+      </div>
+
+      <!-- Componentes: bloques de construcción de la UI que combinan
+           template, script y style en un único archivo .vue -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Componentes — Concepto</div>
+        <div class="topic-def">Bloque de construcción que combina <strong>template + script + style</strong> en un archivo <code>.vue</code>. Puede recibir props y emitir eventos.</div>
+      </div>
+
+      <!-- Utilización de componentes: registro global vs local,
+           importación y uso dentro de otros componentes -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Utilización de componentes</div>
+        <div class="topic-def">Los componentes se <strong>registran globalmente o localmente</strong>, se importan con ES Modules y se usan como etiquetas HTML personalizadas.</div>
+      </div>
+
+      <!-- SPAs (Single Page Applications): aplicaciones web que cargan
+           una sola página HTML y actualizan el contenido dinámicamente -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Concepto y creación de SPAs</div>
+        <div class="topic-def"><strong>Single Page Application</strong>: carga una sola página HTML y actualiza el contenido dinámicamente usando Vue Router, sin recargas completas.</div>
+      </div>
+
+      <!-- Ventajas de SPAs: mejor experiencia de usuario, rendimiento
+           más rápido, separación clara entre frontend y backend -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Ventajas de SPAs</div>
+        <div class="topic-def">Navegación fluida sin recarga, <strong>mejor UX</strong>, API centralizada, rendimiento optimizado y separación clara entre frontend y backend.</div>
+      </div>
+
+      <!-- App como componente de componentes: el componente raíz App.vue
+           orquesta todos los demás componentes de la aplicación -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>App como árbol de componentes</div>
+        <div class="topic-def"><code>App.vue</code> es el <strong>componente raíz</strong> que orquesta el árbol completo; cada componente puede contener hijos formando una jerarquía.</div>
+      </div>
+    </div>
+
+    <!-- ── CICLO DE VIDA ──
+         Hooks que Vue expone en cada fase del componente -->
+    <div style="margin-top:1.5rem;">
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:.75rem;">Ciclo de Vida del Componente</h3>
+      <div class="tip">
+        <strong>¿Qué es?</strong> Vue expone <em>hooks</em> que se ejecutan en momentos concretos: creación, montaje en el DOM, actualización y destrucción.
+      </div>
+
+      <!-- Diagrama visual del ciclo de vida -->
+      <div class="lifecycle">
+        <!-- setup(): primer hook en Composition API,
+             equivale a beforeCreate + created en Options API -->
+        <div class="lc-step">setup()</div>
+        <span class="lc-arrow">→</span>
+        <!-- onBeforeMount: antes de insertar el componente en el DOM real -->
+        <div class="lc-step">onBeforeMount</div>
+        <span class="lc-arrow">→</span>
+        <!-- onMounted: el componente ya está en el DOM, ideal para peticiones -->
+        <div class="lc-step">onMounted</div>
+        <span class="lc-arrow">→</span>
+        <!-- onBeforeUpdate: datos cambiaron, antes de re-renderizar -->
+        <div class="lc-step">onBeforeUpdate</div>
+        <span class="lc-arrow">→</span>
+        <!-- onUpdated: re-renderizado completo, DOM sincronizado -->
+        <div class="lc-step">onUpdated</div>
+        <span class="lc-arrow">→</span>
+        <!-- onActivated / onDeactivated: para componentes dentro de <keep-alive> -->
+        <div class="lc-step">onActivated</div>
+        <span class="lc-arrow">↔</span>
+        <div class="lc-step">onDeactivated</div>
+        <span class="lc-arrow">→</span>
+        <!-- onUnmounted: limpieza de timers, listeners, etc. -->
+        <div class="lc-step">onUnmounted</div>
+      </div>
+
+      <!-- Tabla comparativa montaje vs creación -->
+      <div class="table-wrap" style="margin-top:1.25rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>Fase</th>
+              <th>Hook</th>
+              <th>¿Cuándo se ejecuta?</th>
+              <th>Uso típico</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Creación: el componente aún no está en el DOM -->
+            <tr>
+              <td><span class="tag">Creación</span></td>
+              <td><code>setup()</code></td>
+              <td>Antes de cualquier otra cosa</td>
+              <td>Estado reactivo inicial, inyección de dependencias</td>
+            </tr>
+            <!-- Montaje: el componente se inserta en el DOM -->
+            <tr>
+              <td><span class="tag">Montaje</span></td>
+              <td><code>onMounted</code></td>
+              <td>DOM disponible</td>
+              <td>Peticiones HTTP, refs al DOM, librerías externas</td>
+            </tr>
+            <!-- Actualización: datos reactivos cambian y el DOM se sincroniza -->
+            <tr>
+              <td><span class="tag blue">Actualización</span></td>
+              <td><code>onUpdated</code></td>
+              <td>Tras re-render por cambio de datos</td>
+              <td>Sincronizar estado externo con el DOM</td>
+            </tr>
+            <!-- Activación: componente dentro de keep-alive vuelve a mostrarse -->
+            <tr>
+              <td><span class="tag green">Activación</span></td>
+              <td><code>onActivated</code></td>
+              <td>Keep-alive: componente visible</td>
+              <td>Reanudar polling, refresh de datos</td>
+            </tr>
+            <!-- Desactivación: componente keep-alive se oculta sin destruirse -->
+            <tr>
+              <td><span class="tag green">Desactivación</span></td>
+              <td><code>onDeactivated</code></td>
+              <td>Keep-alive: componente oculto</td>
+              <td>Pausar timers, liberar recursos temporales</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════
+       SECCIÓN 2 — VISTA
+  ══════════════════════════════════════ -->
+  <section class="section" id="vista">
+    <div class="section-header">
+      <div class="section-icon icon-view">🔵</div>
+      <div>
+        <div class="section-title">Vista — Template &amp; Datos</div>
+        <div class="section-subtitle">Sintaxis, directivas y comunicación entre componentes</div>
+      </div>
+    </div>
+
+    <div class="topics-grid">
+
+      <!-- Template inline: la plantilla se define dentro del mismo .vue -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Template como parte del componente</div>
+        <div class="topic-def">La sección <code>&lt;template&gt;</code> dentro del SFC define el HTML del componente, <strong>directamente junto al script y los estilos</strong>.</div>
+      </div>
+
+      <!-- Template externo: se referencia con templateUrl o con x-template -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Usando un template externo</div>
+        <div class="topic-def">Es posible separar la plantilla en un archivo HTML independiente y referenciarla, aunque los <strong>SFC son la práctica recomendada</strong>.</div>
+      </div>
+
+      <!-- Sintaxis Mustache: {{ }} para interpolación de texto,
+           v-bind para atributos dinámicos -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Sintaxis del template</div>
+        <div class="topic-def"><strong>Interpolación</strong> <code>&#123;&#123; expr &#125;&#125;</code> para texto, <code>v-bind</code> (o <code>:</code>) para atributos dinámicos, expresiones JS válidas.</div>
+      </div>
+
+      <!-- Expresiones: JavaScript simple dentro del template,
+           sin sentencias ni lógica compleja -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Expresiones</div>
+        <div class="topic-def">El template acepta <strong>expresiones JS simples</strong>: operaciones, ternarios y llamadas a métodos. No admite sentencias completas (<code>if</code>, <code>for</code> literales).</div>
+      </div>
+
+      <!-- Directivas: atributos especiales prefijados con v-
+           que aplican comportamiento reactivo al DOM -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Directivas</div>
+        <div class="topic-def">Atributos especiales prefijados con <code>v-</code> que aplican <strong>comportamiento reactivo</strong>: <code>v-if</code>, <code>v-for</code>, <code>v-model</code>, <code>v-on</code>, <code>v-show</code>…</div>
+      </div>
+
+      <!-- Props: datos pasados de padre a hijo,
+           solo lectura desde el punto de vista del hijo -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Manejo de datos entre componentes</div>
+        <div class="topic-def"><strong>Props</strong> (padre→hijo) y <strong>emit</strong> (hijo→padre). Para estados globales se usan Pinia o Vuex; para vecinos, un bus o provide/inject.</div>
+      </div>
+
+      <!-- Computed: valores derivados del estado con caché automático -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Propiedades computadas vs observadas</div>
+        <div class="topic-def"><code>computed</code>: valor derivado con <strong>caché automático</strong>. <code>watch</code>: reacciona a cambios con efectos secundarios (peticiones, logs).</div>
+      </div>
+
+      <!-- Validación de props: type, required, default y validator
+           para asegurar el contrato entre componentes -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Validación y valores por defecto</div>
+        <div class="topic-def">Las props aceptan <code>type</code>, <code>required</code>, <code>default</code> y <code>validator</code>, definiendo un <strong>contrato claro</strong> entre padre e hijo.</div>
+      </div>
+
+      <!-- Scopes: cada componente tiene su propio scope de datos,
+           solo accesibles desde dentro del mismo -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Scopes</div>
+        <div class="topic-def">Cada componente posee su propio <strong>scope de datos aislado</strong>. Los datos no son accesibles directamente desde componentes hermanos.</div>
+      </div>
+
+      <!-- $root y $parent: referencias especiales a la instancia raíz
+           y al padre, usar con precaución -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Acceso a root y parent</div>
+        <div class="topic-def"><code>$root</code> apunta a la instancia raíz y <code>$parent</code> al padre directo. Se recomienda usarlos <strong>con moderación</strong> para evitar acoplamiento.</div>
+      </div>
+    </div>
+
+    <!-- Código de ejemplo de directivas -->
+    <div class="code-block">
+      <pre>
+<span class="c">&lt;!-- v-if: renderizado condicional — el nodo no existe en el DOM si es false --&gt;</span>
+<span class="t">&lt;p</span> <span class="k">v-if</span>=<span class="s">"isLoggedIn"</span><span class="t">&gt;</span>Bienvenido, {{ username }}<span class="t">&lt;/p&gt;</span>
+
+<span class="c">&lt;!-- v-for: iteración — genera un elemento por cada ítem del array --&gt;</span>
+<span class="t">&lt;li</span> <span class="k">v-for</span>=<span class="s">"item in items"</span> <span class="a">:key</span>=<span class="s">"item.id"</span><span class="t">&gt;</span>{{ item.name }}<span class="t">&lt;/li&gt;</span>
+
+<span class="c">&lt;!-- v-model: enlace bidireccional entre input y propiedad reactiva --&gt;</span>
+<span class="t">&lt;input</span> <span class="k">v-model</span>=<span class="s">"email"</span> <span class="a">type</span>=<span class="s">"email"</span> <span class="t">/&gt;</span>
+
+<span class="c">&lt;!-- computed: valor derivado con caché (solo se recalcula si cambia nombre) --&gt;</span>
+<span class="k">const</span> <span class="n">fullName</span> = <span class="n">computed</span>(() =&gt; <span class="v">`${firstName.value} ${lastName.value}`</span>)</pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════
+       SECCIÓN 3 — COMPORTAMIENTOS
+  ══════════════════════════════════════ -->
+  <section class="section" id="comportamientos">
+    <div class="section-header">
+      <div class="section-icon icon-beh">🟠</div>
+      <div>
+        <div class="section-title">Comportamientos</div>
+        <div class="section-subtitle">Métodos, eventos, formularios y persistencia</div>
+      </div>
+    </div>
+
+    <div class="topics-grid">
+
+      <!-- Métodos: funciones declaradas en la sección methods u options API
+           que encapsulan lógica de negocio del componente -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Métodos</div>
+        <div class="topic-def">Funciones definidas en <code>methods</code> (Options API) o directamente en <code>setup()</code> que encapsulan la <strong>lógica de negocio</strong> del componente.</div>
+      </div>
+
+      <!-- Detección de eventos: v-on (o @) para escuchar eventos del DOM
+           como click, keydown, keyup, mouseover, etc. -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Eventos de teclado y mouse</div>
+        <div class="topic-def">Con <code>@keydown.enter</code>, <code>@click</code>, <code>@mouseover</code> Vue escucha eventos nativos. Se pueden encadenar <strong>modificadores</strong> (<code>.prevent</code>, <code>.stop</code>).</div>
+      </div>
+
+      <!-- Mixins: objeto reutilizable que aporta opciones
+           (data, methods, hooks) a múltiples componentes -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Mixins</div>
+        <div class="topic-def">Objeto reutilizable que <strong>aporta lógica compartida</strong> (data, methods, hooks) a varios componentes. En Vue 3 se prefieren los <em>Composables</em>.</div>
+      </div>
+
+      <!-- Emit: el hijo notifica al padre mediante $emit('nombre', payload)
+           y el padre escucha con @nombre="handler" -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Emisión y escucha de eventos</div>
+        <div class="topic-def">El hijo notifica al padre con <code>emit('evento', payload)</code>; el padre escucha con <code>@evento="handler"</code>. Flujo de datos <strong>unidireccional y explícito</strong>.</div>
+      </div>
+
+      <!-- v-model en formularios: enlaza el valor del campo
+           a una ref reactiva, simplificando la captura de datos -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Formularios y v-model</div>
+        <div class="topic-def"><code>v-model</code> enlaza <strong>bidireccionalmente</strong> inputs, checkboxes, selects y textareas a propiedades reactivas, simplificando la captura de datos.</div>
+      </div>
+
+      <!-- Renderizado condicional de campos dependientes:
+           mostrar u ocultar campos según el valor de otros -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Campos dependientes</div>
+        <div class="topic-def">Usando <code>v-if</code> / <code>v-show</code> condicionados a propiedades del formulario se <strong>muestra u oculta</strong> cada campo según el estado actual.</div>
+      </div>
+
+      <!-- Validación en tiempo real: watchers o computed para
+           verificar los campos mientras el usuario escribe -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Validación en tiempo real</div>
+        <div class="topic-def">Watchers o computed detectan errores mientras el usuario escribe. Librerías como <strong>VeeValidate</strong> o <strong>Zod</strong> estructuran las reglas de forma escalable.</div>
+      </div>
+
+      <!-- Persistencia de datos: guardar el estado en localStorage,
+           sessionStorage o sincronizar con un backend -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Persistencia de datos</div>
+        <div class="topic-def">El estado se puede guardar en <code>localStorage</code> / <code>sessionStorage</code> o sincronizar con un API REST/GraphQL para <strong>sobrevivir recargas</strong>.</div>
+      </div>
+
+      <!-- Reconstrucción de estado del formulario: restaurar los datos
+           del formulario a partir del estado almacenado -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Reconstrucción del estado</div>
+        <div class="topic-def">Al montar el componente (<code>onMounted</code>) se leen los datos guardados y se <strong>restaura el formulario</strong> al estado previo del usuario.</div>
+      </div>
+    </div>
+
+    <!-- Código de ejemplo de eventos y formularios -->
+    <div class="code-block">
+      <pre>
+<span class="c">// Método llamado desde el template con @submit.prevent</span>
+<span class="k">function</span> <span class="n">handleSubmit</span>() {
+  <span class="k">if</span> (!email.value) { errors.value.email = <span class="s">'Requerido'</span>; <span class="k">return</span>; }
+  <span class="n">localStorage</span>.<span class="n">setItem</span>(<span class="s">'form'</span>, <span class="n">JSON</span>.<span class="n">stringify</span>({ email: email.value }))
+}
+
+<span class="c">// Escuchar evento personalizado del hijo en el padre</span>
+<span class="c">// Hijo:   emit('user-saved', user)</span>
+<span class="c">// Padre:  &lt;UserForm @user-saved="onUserSaved" /&gt;</span>
+<span class="k">function</span> <span class="n">onUserSaved</span>(user) { users.value.push(user) }</pre>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════
+       SECCIÓN 4 — ANIMACIONES Y UTILIDADES
+  ══════════════════════════════════════ -->
+  <section class="section" id="animaciones">
+    <div class="section-header">
+      <div class="section-icon icon-anim">🟣</div>
+      <div>
+        <div class="section-title">Animaciones &amp; Utilidades</div>
+        <div class="section-subtitle">Estilos dinámicos, transiciones, AXIOS y herramientas</div>
+      </div>
+    </div>
+
+    <div class="topics-grid">
+
+      <!-- Binding de estilos inline: :style con objeto o array
+           para aplicar CSS dinámico directamente en el template -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Estilos como atributos</div>
+        <div class="topic-def"><code>:style="{ color: textColor, fontSize: size + 'px' }"</code> aplica <strong>CSS inline dinámico</strong> usando un objeto o array de objetos.</div>
+      </div>
+
+      <!-- Clases CSS dinámicas: :class con objeto o array
+           para activar/desactivar clases según el estado -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Clases CSS dinámicas</div>
+        <div class="topic-def"><code>:class="{ active: isActive, error: hasError }"</code> <strong>activa o desactiva clases</strong> según booleanos reactivos. Compatible con clases estáticas.</div>
+      </div>
+
+      <!-- Componente Transition: envuelve un elemento y aplica
+           clases de entrada/salida para animar con CSS o JS -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Transiciones</div>
+        <div class="topic-def">El componente <code>&lt;Transition&gt;</code> envuelve elementos e inyecta <strong>clases CSS de entrada/salida</strong> (<code>v-enter-from</code>, <code>v-leave-to</code>) para animar con CSS o JS hooks.</div>
+      </div>
+
+      <!-- v-if vs v-show: v-if elimina/crea el nodo del DOM,
+           v-show sólo alterna display:none -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Renderizado condicional</div>
+        <div class="topic-def"><code>v-if</code> <strong>elimina/crea el nodo</strong> del DOM; <code>v-show</code> sólo alterna <code>display:none</code>. Usar <code>v-show</code> para toggles frecuentes.</div>
+      </div>
+
+      <!-- Librerías externas: instalar via npm e importar
+           en el componente o registrarlas globalmente en main.js -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Incorporación de librerías externas</div>
+        <div class="topic-def">Se instalan via <code>npm</code> y se importan en el componente o se registran globalmente en <code>main.js</code>. Ej: <strong>Chart.js</strong>, <strong>VueUse</strong>, <strong>Day.js</strong>.</div>
+      </div>
+
+      <!-- AXIOS: librería HTTP para consumir APIs REST,
+           devuelve promesas y maneja interceptores -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Envío y recepción con AXIOS</div>
+        <div class="topic-def">AXIOS es una librería HTTP basada en promesas. Permite <strong>GET, POST, PUT, DELETE</strong>, interceptores globales y cancelación de peticiones.</div>
+      </div>
+
+      <!-- Vue Devtools: extensión de Chrome/Firefox para inspeccionar
+           el árbol de componentes, estado y eventos en tiempo real -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Vue Devtools</div>
+        <div class="topic-def">Extensión de Chrome/Firefox que permite <strong>inspeccionar el árbol de componentes</strong>, el estado reactivo, los eventos emitidos y las rutas en tiempo real.</div>
+      </div>
+
+      <!-- Configuraciones iniciales de debug: modo desarrollo de Vue,
+           sourcemaps, mensajes de error detallados en consola -->
+      <div class="topic-card">
+        <div class="topic-name"><span class="topic-dot"></span>Configuraciones para debug</div>
+        <div class="topic-def">En modo <code>development</code>, Vue activa <strong>mensajes de advertencia detallados</strong>. Vite/Webpack generan source maps para rastrear errores hasta el código fuente.</div>
+      </div>
+    </div>
+
+    <!-- Código de ejemplo de AXIOS + Transition -->
+    <div class="code-block">
+      <pre>
+<span class="c">// Petición GET con AXIOS — se ejecuta al montar el componente</span>
+<span class="k">import</span> <span class="n">axios</span> <span class="k">from</span> <span class="s">'axios'</span>
+
+<span class="n">onMounted</span>(<span class="k">async</span> () =&gt; {
+  <span class="k">const</span> { data } = <span class="k">await</span> <span class="n">axios</span>.<span class="n">get</span>(<span class="s">'/api/users'</span>)
+  users.value = data
+})
+
+<span class="c">&lt;!-- Transition anima la aparición/desaparición del listado --&gt;</span>
+<span class="t">&lt;Transition</span> <span class="a">name</span>=<span class="s">"fade"</span><span class="t">&gt;</span>
+  <span class="t">&lt;ul</span> <span class="k">v-if</span>=<span class="s">"users.length"</span><span class="t">&gt;</span>
+    <span class="t">&lt;li</span> <span class="k">v-for</span>=<span class="s">"u in users"</span> <span class="a">:key</span>=<span class="s">"u.id"</span><span class="t">&gt;</span>{{ u.name }}<span class="t">&lt;/li&gt;</span>
+  <span class="t">&lt;/ul&gt;</span>
+<span class="t">&lt;/Transition&gt;</span>
+
+<span class="c">/* CSS para la transición fade */</span>
+<span class="k">.fade-enter-active</span>, <span class="k">.fade-leave-active</span> { transition: opacity <span class="v">.4s</span> ease }
+<span class="k">.fade-enter-from</span>,  <span class="k">.fade-leave-to</span>     { opacity: <span class="v">0</span> }</pre>
+    </div>
+
+    <div class="tip">
+      <strong>Consejo:</strong> Instala la extensión <em>Vue Devtools</em> desde la Chrome Web Store y activa el panel de Vue en DevTools (F12) para depurar componentes, estado y eventos en tiempo real.
+    </div>
+  </section>
+
+</div><!-- /container -->
+
+<footer>
+  Vue.js · Proyecto Práctico · Todos los temas comentados con definición
+</footer>
+
+
+<script>
+  /* ── TEMA CLARO / OSCURO ──────────────────────────────────────────
+     Detecta la preferencia del sistema y permite alternar manualmente.
+     Persiste la elección en localStorage para mantenerla entre sesiones. */
+  const html    = document.documentElement;
+  const btn     = document.getElementById('themeBtn');
+  const saved   = localStorage.getItem('theme');
+  const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  // Aplica el tema guardado o el del sistema al cargar
+  const initTheme = saved || (sysDark ? 'dark' : 'light');
+  html.setAttribute('data-theme', initTheme);
+  btn.textContent = initTheme === 'dark' ? '☀️ Claro' : '🌙 Oscuro';
+
+  // Toggle al hacer clic
+  btn.addEventListener('click', () => {
+    const current = html.getAttribute('data-theme');
+    const next    = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    btn.textContent = next === 'dark' ? '☀️ Claro' : '🌙 Oscuro';
+  });
+
+
+  /* ── MENÚ HAMBURGUESA ─────────────────────────────────────────────
+     Muestra/oculta el menú móvil y anima las tres líneas del ícono.
+     Cierra el menú al hacer clic fuera de él. */
+  const hamburger   = document.getElementById('hamburger');
+  const mobileMenu  = document.getElementById('mobileMenu');
+
+  hamburger.addEventListener('click', () => {
+    const isOpen = mobileMenu.classList.toggle('open');
+    hamburger.classList.toggle('open', isOpen);
+    hamburger.setAttribute('aria-expanded', isOpen);
+  });
+
+  // Cierra el menú al hacer clic fuera
+  document.addEventListener('click', (e) => {
+    if (!hamburger.contains(e.target) && !mobileMenu.contains(e.target)) {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', false);
+    }
+  });
+
+  // Función llamada desde los links del menú móvil para cerrarlo
+  function closeMobile() {
+    mobileMenu.classList.remove('open');
+    hamburger.classList.remove('open');
+    hamburger.setAttribute('aria-expanded', false);
+  }
+
+
+  /* ── SMOOTH SCROLL ────────────────────────────────────────────────
+     Permite navegación suave al hacer clic en los enlaces del navbar. */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+
+</body>
+</html>
